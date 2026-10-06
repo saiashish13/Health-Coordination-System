@@ -54,7 +54,12 @@ async function request(endpoint, options = {}) {
     delete headers["Content-Type"]; // Let browser set boundary
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  } catch (netErr) {
+    throw new Error(`Unable to connect to Healthcare API at ${API_BASE_URL}. Please verify the Python backend is running.`);
+  }
 
   if (response.status === 401) {
     clearSession();

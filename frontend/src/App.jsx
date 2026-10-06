@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider } from "./context/ToastContext";
+import ScrollProgress from "./components/ScrollProgress";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -37,12 +38,14 @@ import DoctorReview from "./pages/DoctorReview";
 
 import Notifications from "./pages/Notifications";
 import AccessAuditLog from "./pages/AccessAuditLog";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
     <ThemeProvider>
       <ToastProvider>
         <BrowserRouter>
+          <ScrollProgress />
           <Routes>
 
             {/* Login and Registration */}
@@ -170,6 +173,9 @@ function App() {
               path="/access-audit-log"
               element={<AccessAuditLog />}
             />
+
+            {/* 404 Fallback */}
+            <Route path="*" element={<NotFound />} />
 
           </Routes>
         </BrowserRouter>
