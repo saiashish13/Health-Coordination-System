@@ -1,0 +1,97 @@
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 25px;
+
+  background:
+    linear-gradient(
+      rgba(224, 245, 248, 0.78),
+      rgba(224, 245, 248, 0.78)
+    ),
+    url("https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=2000&q=80");
+
+  background-size: cover;
+  background-position: center;
+}
+
+.login-box {
+  width: 420px;
+  padding: 45px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 18px;
+  text-align: center;
+  box-shadow: 0 10px 35px rgba(0, 70, 90, 0.2);
+  border-top: 5px solid #168aad;
+}
+
+.login-box h1 {
+  font-size: 27px;
+  margin-bottom: 8px;
+  color: #087ea4;
+}
+
+.subtitle {
+  color: #607d8b;
+  margin-bottom: 28px;
+}
+
+.login-box h2 {
+  color: #164e63;
+  margin-bottom: 22px;
+}
+
+.login-box input {
+  width: 100%;
+  padding: 13px;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+  border: 1px solid #c8e2e8;
+  border-radius: 8px;
+  outline: none;
+  font-size: 14px;
+}
+
+.login-box input:focus {
+  border-color: #168aad;
+  box-shadow: 0 0 0 3px rgba(22, 138, 173, 0.1);
+}
+
+.login-box button {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  background: #168aad;
+  color: white;
+}
+
+.login-box button:hover {
+  background: #087ea4;
+}
+
+.register-text {
+  margin-top: 22px;
+  color: #607d8b;
+}
+
+.register-text a {
+  color: #087ea4;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.register-text a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 500px) {
+  .login-box {
+    width: 100%;
+    padding: 30px;
+  }
+}

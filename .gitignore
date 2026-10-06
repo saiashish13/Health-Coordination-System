@@ -1,0 +1,39 @@
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.db
+backend/healthcare.db
+backend/__pycache__/
+backend/*/__pycache__/
+backend/*/*/__pycache__/
+
+# IDE & System
+.DS_Store
+Thumbs.db
+*.log
+.aider-desk/
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
