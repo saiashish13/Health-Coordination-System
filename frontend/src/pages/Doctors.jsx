@@ -16,16 +16,26 @@ function Doctors() {
 
   useEffect(() => {
     doctorApi.getAll()
-      .then(res => setDoctors(res))
+      .then(res => setDoctors(res || []))
       .catch(err => console.error("Error fetching doctors", err))
       .finally(() => setLoading(false));
   }, []);
 
   const filtered = doctors.filter(d => {
-    const search = searchTerm.toLowerCase();
-    const name = d.user?.FullName || `Doctor #${d.DoctorID}`;
-    const specialty = d.Specialty || "";
-    return name.toLowerCase().includes(search) || specialty.toLowerCase().includes(search);
+    const search = searchTerm.toLowerCase().trim();
+    if (!search) return true;
+
+    const docId = String(d.DoctorID || d.id || "").toLowerCase();
+    const name = (d.user?.FullName || d.FullName || `Doctor #${d.DoctorID}`).toLowerCase();
+    const email = (d.user?.Email || d.Email || "").toLowerCase();
+    const specialty = (d.Specialty || "").toLowerCase();
+    const license = (d.LicenseNumber || "").toLowerCase();
+
+    return name.includes(search) || 
+           specialty.includes(search) ||
+           docId.includes(search) ||
+           email.includes(search) ||
+           license.includes(search);
   });
 
   return (
@@ -47,7 +57,7 @@ function Doctors() {
               <input
                 type="text"
                 className="search-input"
-                placeholder="Search by doctor name or specialty..."
+                placeholder="Search by doctor name, specialty, Doctor ID, email or license..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -72,15 +82,15 @@ function Doctors() {
                   {filtered.length === 0 ? (
                     <tr>
                       <td colSpan={5} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
-                        No doctors found.
+                        No doctors found matching your search.
                       </td>
                     </tr>
                   ) : (
                     filtered.map((d) => (
                       <tr key={d.DoctorID}>
                         <td style={{ fontWeight: "700" }}>#{d.DoctorID}</td>
-                        <td style={{ fontWeight: "600", color: "var(--primary)" }}>Dr. {d.user?.FullName || "Provider"}</td>
-                        <td>{d.user?.Email || "N/A"}</td>
+                        <td style={{ fontWeight: "600", color: "var(--primary)" }}>Dr. {d.user?.FullName || d.FullName || "Provider"}</td>
+                        <td>{d.user?.Email || d.Email || "N/A"}</td>
                         <td><Badge status="ACTIVE" text={d.Specialty || "General Medicine"} /></td>
                         <td>{d.LicenseNumber || "MED-884920"}</td>
                       </tr>

@@ -6,7 +6,8 @@ import PageHeader from "../components/PageHeader";
 import Badge from "../components/Badge";
 import Modal from "../components/Modal";
 import SkeletonLoader from "../components/SkeletonLoader";
-import { appointmentApi, getUserSession } from "../services/api";
+import { appointmentApi, patientApi, doctorApi, getUserSession } from "../services/api";
+import { filterByRole } from "../utils/roleFilter";
 import { useToast } from "../context/ToastContext";
 import { Calendar, Plus, Search, Check, Clock, XCircle } from "lucide-react";
 import "../styles/Dashboard.css";
@@ -16,6 +17,8 @@ function Appointments() {
   const { addToast } = useToast();
 
   const [appointments, setAppointments] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showScheduleForm, setShowScheduleForm] = useState(false);
@@ -25,23 +28,34 @@ function Appointments() {
   const [appointmentDate, setAppointmentDate] = useState("");
   const [reason, setReason] = useState("");
 
-  const loadAppointments = () => {
+  const loadData = () => {
     setLoading(true);
-    appointmentApi.getAll()
-      .then(res => setAppointments(res))
-      .catch(err => console.error("Error fetching appointments", err))
+    Promise.all([
+      appointmentApi.getAll().catch(() => []),
+      patientApi.getAll().catch(() => []),
+      doctorApi.getAll().catch(() => [])
+    ])
+      .then(([appts, pats, docs]) => {
+        setAppointments(appts || []);
+        setPatients(pats || []);
+        setDoctors(docs || []);
+        
+        if (pats?.length > 0 && !patientId) setPatientId(pats[0].PatientID);
+        if (docs?.length > 0 && !doctorId) setDoctorId(docs[0].DoctorID);
+      })
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    appointmentApi.getAll()
-      .then(res => setAppointments(res))
-      .catch(err => console.error("Error fetching appointments", err))
-      .finally(() => setLoading(false));
+    loadData();
   }, []);
 
   const handleSchedule = async (e) => {
     e.preventDefault();
+    if (!patientId || !doctorId || !appointmentDate) {
+      addToast("Please fill out all required fields", "warning");
+      return;
+    }
     try {
       await appointmentApi.create({
         PatientID: parseInt(patientId),
@@ -52,7 +66,7 @@ function Appointments() {
       addToast("Appointment scheduled successfully!", "success");
       setShowScheduleForm(false);
       setReason("");
-      loadAppointments();
+      loadData();
     } catch (err) {
       addToast(err.message || "Failed to schedule appointment", "error");
     }
@@ -62,20 +76,32 @@ function Appointments() {
     try {
       await appointmentApi.updateStatus(id, status);
       addToast(`Appointment #${id} set to ${status}`, "success");
-      loadAppointments();
+      loadData();
     } catch (err) {
       addToast("Error updating status: " + err.message, "error");
     }
   };
 
-  const filtered = appointments.filter(a => {
-    const search = searchTerm.toLowerCase();
-    const patientName = a.patient?.user?.FullName || `Patient #${a.PatientID}`;
-    const doctorName = a.doctor?.user?.FullName || `Doctor #${a.DoctorID}`;
-    const reasonText = a.Reason || "";
-    return patientName.toLowerCase().includes(search) || 
-           doctorName.toLowerCase().includes(search) || 
-           reasonText.toLowerCase().includes(search);
+  // Enforce role-based access filtering
+  const roleFiltered = filterByRole(appointments, currentUser);
+
+  const filtered = roleFiltered.filter(a => {
+    const search = searchTerm.toLowerCase().trim();
+    if (!search) return true;
+
+    const apptId = String(a.AppointmentID || a.id || "").toLowerCase();
+    const patientName = (a.patient?.user?.FullName || a.patient?.FullName || a.PatientName || `Patient #${a.PatientID || ""}`).toLowerCase();
+    const doctorName = (a.doctor?.user?.FullName || a.doctor?.FullName || a.DoctorName || `Doctor #${a.DoctorID || ""}`).toLowerCase();
+    const reasonText = (a.Reason || a.reason || "").toLowerCase();
+    const statusText = (a.Status || a.status || "").toLowerCase();
+    const dateText = a.AppointmentDate ? new Date(a.AppointmentDate).toLocaleString().toLowerCase() : "";
+
+    return patientName.includes(search) || 
+           doctorName.includes(search) || 
+           reasonText.includes(search) ||
+           statusText.includes(search) ||
+           apptId.includes(search) ||
+           dateText.includes(search);
   });
 
   return (
@@ -86,7 +112,7 @@ function Appointments() {
       <div className="dashboard-content">
         <PageHeader 
           title="Appointments Management" 
-          subtitle="View, schedule, and update patient clinical appointments"
+          subtitle={currentUser?.role === "DOCTOR" ? "My upcoming patient clinical appointments" : currentUser?.role === "PATIENT" ? "My scheduled healthcare appointments" : "View, schedule, and update patient clinical appointments"}
           icon={Calendar}
           actions={
             <button className="btn-primary" onClick={() => setShowScheduleForm(true)}>
@@ -104,7 +130,7 @@ function Appointments() {
               <input
                 type="text"
                 className="search-input"
-                placeholder="Search by patient, doctor or reason..."
+                placeholder="Search by patient, doctor, status, date or reason..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -136,13 +162,13 @@ function Appointments() {
                     </tr>
                   ) : (
                     filtered.map((a) => (
-                      <tr key={a.AppointmentID}>
+                      <tr key={a.AppointmentID || a.id}>
                         <td style={{ fontWeight: "700" }}>#{a.AppointmentID}</td>
-                        <td>{a.patient?.user?.FullName || `Patient #${a.PatientID}`}</td>
-                        <td>{a.doctor?.user?.FullName || `Doctor #${a.DoctorID}`}</td>
+                        <td style={{ fontWeight: "600" }}>{a.patient?.user?.FullName || a.patient?.FullName || `Patient #${a.PatientID}`}</td>
+                        <td style={{ fontWeight: "600", color: "var(--primary)" }}>Dr. {a.doctor?.user?.FullName || a.doctor?.FullName || `Doctor #${a.DoctorID}`}</td>
                         <td>{new Date(a.AppointmentDate).toLocaleString()}</td>
                         <td><Badge status={a.Status} /></td>
-                        <td>{a.Reason || "N/A"}</td>
+                        <td>{a.Reason || "Routine Checkup"}</td>
                         <td>
                           <div className="action-btn-group">
                             <button
@@ -188,28 +214,61 @@ function Appointments() {
           title="Schedule New Appointment"
         >
           <form onSubmit={handleSchedule} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            
             <div className="form-group">
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Patient ID</label>
-              <input
-                type="number"
-                className="form-input"
-                placeholder="Enter Patient ID"
-                value={patientId}
-                onChange={(e) => setPatientId(e.target.value)}
-                required
-              />
+              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Select Patient</label>
+              {patients.length > 0 ? (
+                <select
+                  className="form-input role-select"
+                  value={patientId}
+                  onChange={(e) => setPatientId(e.target.value)}
+                  required
+                  disabled={currentUser?.role === "PATIENT"}
+                >
+                  {patients.map(p => (
+                    <option key={p.PatientID} value={p.PatientID}>
+                      {p.user?.FullName || `Patient #${p.PatientID}`} (ID: {p.PatientID})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="number"
+                  className="form-input"
+                  placeholder="Enter Patient ID (e.g. 1)"
+                  value={patientId}
+                  onChange={(e) => setPatientId(e.target.value)}
+                  required
+                />
+              )}
             </div>
 
             <div className="form-group">
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Doctor ID</label>
-              <input
-                type="number"
-                className="form-input"
-                placeholder="Enter Doctor ID"
-                value={doctorId}
-                onChange={(e) => setDoctorId(e.target.value)}
-                required
-              />
+              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Select Doctor</label>
+              {doctors.length > 0 ? (
+                <select
+                  className="form-input role-select"
+                  value={doctorId}
+                  onChange={(e) => setDoctorId(e.target.value)}
+                  required
+                  disabled={currentUser?.role === "DOCTOR"}
+                >
+                  {doctors.map(d => (
+                    <option key={d.DoctorID} value={d.DoctorID}>
+                      Dr. {d.user?.FullName || `Doctor #${d.DoctorID}`} - {d.Specialty || "Cardiology"} (ID: {d.DoctorID})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="number"
+                  className="form-input"
+                  placeholder="Enter Doctor ID (e.g. 1)"
+                  value={doctorId}
+                  onChange={(e) => setDoctorId(e.target.value)}
+                  required
+                />
+              )}
             </div>
 
             <div className="form-group">
@@ -228,10 +287,11 @@ function Appointments() {
               <textarea
                 className="form-input"
                 rows={3}
-                placeholder="Chief complaint or symptoms..."
+                placeholder="Chief complaint, symptoms, or routine checkup notes..."
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 style={{ height: "auto" }}
+                required
               />
             </div>
 

@@ -16,16 +16,28 @@ function AccessAuditLog() {
 
   useEffect(() => {
     adminApi.getAuditLogs()
-      .then(res => setLogs(res))
+      .then(res => setLogs(res || []))
       .catch(err => console.error("Error fetching audit logs", err))
       .finally(() => setLoading(false));
   }, []);
 
   const filtered = logs.filter(log => {
-    const search = searchTerm.toLowerCase();
-    return (log.ActionType || "").toLowerCase().includes(search) || 
-           (log.ResourceType || "").toLowerCase().includes(search) ||
-           String(log.LogID).includes(search);
+    const search = searchTerm.toLowerCase().trim();
+    if (!search) return true;
+
+    const logId = String(log.LogID || log.id || "").toLowerCase();
+    const userId = String(log.UserID || "").toLowerCase();
+    const resId = String(log.ResourceID || "").toLowerCase();
+    const action = (log.ActionType || log.Action || "").toLowerCase();
+    const resType = (log.ResourceType || "").toLowerCase();
+    const dateText = log.Timestamp ? new Date(log.Timestamp).toLocaleString().toLowerCase() : "";
+
+    return action.includes(search) || 
+           resType.includes(search) ||
+           logId.includes(search) ||
+           userId.includes(search) ||
+           resId.includes(search) ||
+           dateText.includes(search);
   });
 
   return (
@@ -47,7 +59,7 @@ function AccessAuditLog() {
               <input
                 type="text"
                 className="search-input"
-                placeholder="Search by action, resource type or log ID..."
+                placeholder="Search by action, resource type, User ID, Resource ID or log ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -73,7 +85,7 @@ function AccessAuditLog() {
                   {filtered.length === 0 ? (
                     <tr>
                       <td colSpan={6} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
-                        No audit logs recorded.
+                        No audit logs recorded matching your search.
                       </td>
                     </tr>
                   ) : (
@@ -81,8 +93,8 @@ function AccessAuditLog() {
                       <tr key={l.LogID}>
                         <td style={{ fontWeight: "700" }}>#{l.LogID}</td>
                         <td>User #{l.UserID || "System"}</td>
-                        <td><Badge status="ACTIVE" text={l.ActionType} /></td>
-                        <td>{l.ResourceType}</td>
+                        <td><Badge status="ACTIVE" text={l.ActionType || l.Action || "VIEW"} /></td>
+                        <td style={{ fontWeight: "600", color: "var(--primary)" }}>{l.ResourceType}</td>
                         <td>#{l.ResourceID}</td>
                         <td>{l.Timestamp ? new Date(l.Timestamp).toLocaleString() : "N/A"}</td>
                       </tr>

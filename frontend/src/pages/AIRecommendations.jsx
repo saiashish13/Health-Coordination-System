@@ -16,17 +16,28 @@ function AIRecommendations() {
 
   useEffect(() => {
     aiApi.getRecommendations()
-      .then(res => setRecommendations(res))
+      .then(res => setRecommendations(res || []))
       .catch(err => console.error("Error fetching AI recommendations", err))
       .finally(() => setLoading(false));
   }, []);
 
   const filtered = recommendations.filter(rec => {
-    const search = searchTerm.toLowerCase();
-    const patientName = rec.patient?.user?.FullName || `Patient #${rec.PatientID}`;
-    return patientName.toLowerCase().includes(search) || 
-           (rec.RecommendationType || "").toLowerCase().includes(search) ||
-           (rec.RecommendationText || "").toLowerCase().includes(search);
+    const search = searchTerm.toLowerCase().trim();
+    if (!search) return true;
+
+    const recId = String(rec.RecommendationID || rec.id || "").toLowerCase();
+    const patientName = (rec.patient?.user?.FullName || rec.patient?.FullName || `Patient #${rec.PatientID}`).toLowerCase();
+    const typeText = (rec.RecommendationType || "").toLowerCase();
+    const detailsText = (rec.RecommendationText || "").toLowerCase();
+    const statusText = (rec.Status || "").toLowerCase();
+    const dateText = rec.ReviewedAt ? new Date(rec.ReviewedAt).toLocaleDateString().toLowerCase() : "";
+
+    return patientName.includes(search) || 
+           typeText.includes(search) ||
+           detailsText.includes(search) ||
+           recId.includes(search) ||
+           statusText.includes(search) ||
+           dateText.includes(search);
   });
 
   return (
@@ -48,7 +59,7 @@ function AIRecommendations() {
               <input
                 type="text"
                 className="search-input"
-                placeholder="Search by patient, recommendation type or details..."
+                placeholder="Search by ID, patient, recommendation type, details or status..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -74,15 +85,15 @@ function AIRecommendations() {
                   {filtered.length === 0 ? (
                     <tr>
                       <td colSpan={6} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
-                        No AI recommendations found.
+                        No AI recommendations found matching your search.
                       </td>
                     </tr>
                   ) : (
                     filtered.map((rec) => (
                       <tr key={rec.RecommendationID}>
                         <td style={{ fontWeight: "700" }}>#{rec.RecommendationID}</td>
-                        <td>{rec.patient?.user?.FullName || `Patient #${rec.PatientID}`}</td>
-                        <td><Badge status="ACTIVE" text={rec.RecommendationType} /></td>
+                        <td style={{ fontWeight: "600" }}>{rec.patient?.user?.FullName || rec.patient?.FullName || `Patient #${rec.PatientID}`}</td>
+                        <td><Badge status="ACTIVE" text={rec.RecommendationType || "CARE_COORDINATION"} /></td>
                         <td>{rec.RecommendationText}</td>
                         <td><Badge status={rec.Status} /></td>
                         <td>{rec.ReviewedAt ? new Date(rec.ReviewedAt).toLocaleDateString() : "Pending Clinician Review"}</td>

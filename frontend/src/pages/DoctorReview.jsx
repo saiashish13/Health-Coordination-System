@@ -20,16 +20,13 @@ function DoctorReview() {
   const loadRecommendations = () => {
     setLoading(true);
     aiApi.getRecommendations()
-      .then(res => setRecommendations(res))
+      .then(res => setRecommendations(res || []))
       .catch(err => console.error("Error fetching AI recommendations", err))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    aiApi.getRecommendations()
-      .then(res => setRecommendations(res))
-      .catch(err => console.error("Error fetching AI recommendations", err))
-      .finally(() => setLoading(false));
+    loadRecommendations();
   }, []);
 
   const handleReviewApprove = async (recId) => {
@@ -53,11 +50,20 @@ function DoctorReview() {
   };
 
   const filtered = recommendations.filter(rec => {
-    const search = searchTerm.toLowerCase();
-    const patientName = rec.patient?.user?.FullName || `Patient #${rec.PatientID}`;
-    return patientName.toLowerCase().includes(search) || 
-           (rec.RecommendationText || "").toLowerCase().includes(search) ||
-           String(rec.RecommendationID).includes(search);
+    const search = searchTerm.toLowerCase().trim();
+    if (!search) return true;
+
+    const recId = String(rec.RecommendationID || rec.id || "").toLowerCase();
+    const recIdRecord = String(rec.RecordID || "").toLowerCase();
+    const patientName = (rec.patient?.user?.FullName || rec.patient?.FullName || `Patient #${rec.PatientID}`).toLowerCase();
+    const text = (rec.RecommendationText || "").toLowerCase();
+    const statusText = (rec.Status || "").toLowerCase();
+
+    return patientName.includes(search) || 
+           text.includes(search) ||
+           recId.includes(search) ||
+           recIdRecord.includes(search) ||
+           statusText.includes(search);
   });
 
   return (
@@ -79,7 +85,7 @@ function DoctorReview() {
               <input
                 type="text"
                 className="search-input"
-                placeholder="Search by ID, patient or text..."
+                placeholder="Search by ID, patient, recommendation text or status..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -105,15 +111,15 @@ function DoctorReview() {
                   {filtered.length === 0 ? (
                     <tr>
                       <td colSpan={6} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
-                        No pending recommendations in verification queue.
+                        No pending recommendations in verification queue matching your search.
                       </td>
                     </tr>
                   ) : (
                     filtered.map((rec) => (
                       <tr key={rec.RecommendationID}>
                         <td style={{ fontWeight: "700" }}>#{rec.RecommendationID}</td>
-                        <td>{rec.patient?.user?.FullName || `Patient #${rec.PatientID}`}</td>
-                        <td>{rec.RecordID ? `#${rec.RecordID}` : "N/A"}</td>
+                        <td style={{ fontWeight: "600" }}>{rec.patient?.user?.FullName || rec.patient?.FullName || `Patient #${rec.PatientID}`}</td>
+                        <td style={{ fontWeight: "600", color: "var(--primary)" }}>{rec.RecordID ? `#${rec.RecordID}` : "N/A"}</td>
                         <td>{rec.RecommendationText}</td>
                         <td><Badge status={rec.Status} /></td>
                         <td>

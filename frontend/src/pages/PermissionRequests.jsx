@@ -6,7 +6,8 @@ import PageHeader from "../components/PageHeader";
 import Badge from "../components/Badge";
 import Modal from "../components/Modal";
 import SkeletonLoader from "../components/SkeletonLoader";
-import { permissionApi, getUserSession } from "../services/api";
+import { permissionApi, patientApi, doctorApi, getUserSession } from "../services/api";
+import { filterByRole } from "../utils/roleFilter";
 import { useToast } from "../context/ToastContext";
 import { ShieldCheck, Plus, Search, Check, X } from "lucide-react";
 import "../styles/Dashboard.css";
@@ -16,6 +17,8 @@ function PermissionRequests() {
   const { addToast } = useToast();
 
   const [requests, setRequests] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -23,23 +26,34 @@ function PermissionRequests() {
   const [doctorId, setDoctorId] = useState(() => currentUser?.role === "DOCTOR" ? currentUser?.profile_id || "" : "");
   const [reason, setReason] = useState("");
 
-  const loadRequests = () => {
+  const loadData = () => {
     setLoading(true);
-    permissionApi.getRequests()
-      .then(res => setRequests(res))
-      .catch(err => console.error("Error fetching access requests", err))
+    Promise.all([
+      permissionApi.getRequests().catch(() => []),
+      patientApi.getAll().catch(() => []),
+      doctorApi.getAll().catch(() => [])
+    ])
+      .then(([reqs, pats, docs]) => {
+        setRequests(reqs || []);
+        setPatients(pats || []);
+        setDoctors(docs || []);
+
+        if (pats?.length > 0 && !patientId) setPatientId(pats[0].PatientID);
+        if (docs?.length > 0 && !doctorId) setDoctorId(docs[0].DoctorID);
+      })
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    permissionApi.getRequests()
-      .then(res => setRequests(res))
-      .catch(err => console.error("Error fetching access requests", err))
-      .finally(() => setLoading(false));
+    loadData();
   }, []);
 
   const handleCreateRequest = async (e) => {
     e.preventDefault();
+    if (!patientId || !doctorId || !reason) {
+      addToast("Please fill in patient, doctor and reason for request", "warning");
+      return;
+    }
     try {
       await permissionApi.createRequest({
         PatientID: parseInt(patientId),
@@ -49,7 +63,7 @@ function PermissionRequests() {
       addToast("Access permission request submitted successfully!", "success");
       setShowForm(false);
       setReason("");
-      loadRequests();
+      loadData();
     } catch (err) {
       addToast(err.message || "Failed to submit permission request", "error");
     }
@@ -59,7 +73,7 @@ function PermissionRequests() {
     try {
       await permissionApi.approveRequest(id);
       addToast(`Permission request #${id} approved!`, "success");
-      loadRequests();
+      loadData();
     } catch (err) {
       addToast(err.message || "Failed to approve request", "error");
     }
@@ -69,19 +83,31 @@ function PermissionRequests() {
     try {
       await permissionApi.rejectRequest(id);
       addToast(`Permission request #${id} rejected.`, "info");
-      loadRequests();
+      loadData();
     } catch (err) {
       addToast(err.message || "Failed to reject request", "error");
     }
   };
 
-  const filtered = requests.filter(r => {
-    const search = searchTerm.toLowerCase();
-    const patientName = r.patient?.user?.FullName || `Patient #${r.PatientID}`;
-    const doctorName = r.doctor?.user?.FullName || `Doctor #${r.DoctorID}`;
-    return patientName.toLowerCase().includes(search) || 
-           doctorName.toLowerCase().includes(search) ||
-           String(r.RequestID).includes(search);
+  const roleFiltered = filterByRole(requests, currentUser);
+
+  const filtered = roleFiltered.filter(r => {
+    const search = searchTerm.toLowerCase().trim();
+    if (!search) return true;
+
+    const reqId = String(r.RequestID || r.id || "").toLowerCase();
+    const patientName = (r.patient?.user?.FullName || r.patient?.FullName || `Patient #${r.PatientID}`).toLowerCase();
+    const doctorName = (r.doctor?.user?.FullName || r.doctor?.FullName || `Doctor #${r.DoctorID}`).toLowerCase();
+    const reasonText = (r.Reason || "").toLowerCase();
+    const statusText = (r.Status || "").toLowerCase();
+    const dateText = r.RequestedAt ? new Date(r.RequestedAt).toLocaleDateString().toLowerCase() : "";
+
+    return patientName.includes(search) || 
+           doctorName.includes(search) ||
+           reqId.includes(search) ||
+           reasonText.includes(search) ||
+           statusText.includes(search) ||
+           dateText.includes(search);
   });
 
   return (
@@ -92,7 +118,7 @@ function PermissionRequests() {
       <div className="dashboard-content">
         <PageHeader 
           title="Patient Access Permissions" 
-          subtitle="Manage HIPAA consent and data sharing authorization requests"
+          subtitle={currentUser?.role === "DOCTOR" ? "My pending & approved patient record access requests" : currentUser?.role === "PATIENT" ? "My record access authorization requests & consent history" : "Manage HIPAA consent and data sharing authorization requests"}
           icon={ShieldCheck}
           actions={
             <button className="btn-primary" onClick={() => setShowForm(true)}>
@@ -109,7 +135,7 @@ function PermissionRequests() {
               <input
                 type="text"
                 className="search-input"
-                placeholder="Search by Request ID, patient or doctor..."
+                placeholder="Search by Request ID, Patient, Doctor, reason or status..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -136,15 +162,15 @@ function PermissionRequests() {
                   {filtered.length === 0 ? (
                     <tr>
                       <td colSpan={7} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
-                        No permission requests found.
+                        No permission requests found matching your profile and search.
                       </td>
                     </tr>
                   ) : (
                     filtered.map((r) => (
                       <tr key={r.RequestID}>
                         <td style={{ fontWeight: "700" }}>#{r.RequestID}</td>
-                        <td>{r.patient?.user?.FullName || `Patient #${r.PatientID}`}</td>
-                        <td>{r.doctor?.user?.FullName || `Doctor #${r.DoctorID}`}</td>
+                        <td style={{ fontWeight: "600" }}>{r.patient?.user?.FullName || r.patient?.FullName || `Patient #${r.PatientID}`}</td>
+                        <td style={{ fontWeight: "600", color: "var(--primary)" }}>Dr. {r.doctor?.user?.FullName || r.doctor?.FullName || `Doctor #${r.DoctorID}`}</td>
                         <td>{r.Reason || "Medical Record Review"}</td>
                         <td>{r.RequestedAt ? new Date(r.RequestedAt).toLocaleDateString() : "N/A"}</td>
                         <td><Badge status={r.Status} /></td>
@@ -182,28 +208,61 @@ function PermissionRequests() {
 
         <Modal isOpen={showForm} onClose={() => setShowForm(false)} title="New Access Permission Request">
           <form onSubmit={handleCreateRequest} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            
             <div className="form-group">
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Patient ID</label>
-              <input
-                type="number"
-                className="form-input"
-                placeholder="Patient ID"
-                value={patientId}
-                onChange={(e) => setPatientId(e.target.value)}
-                required
-              />
+              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Select Patient</label>
+              {patients.length > 0 ? (
+                <select
+                  className="form-input role-select"
+                  value={patientId}
+                  onChange={(e) => setPatientId(e.target.value)}
+                  required
+                  disabled={currentUser?.role === "PATIENT"}
+                >
+                  {patients.map(p => (
+                    <option key={p.PatientID} value={p.PatientID}>
+                      {p.user?.FullName || `Patient #${p.PatientID}`} (ID: {p.PatientID})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="number"
+                  className="form-input"
+                  placeholder="Patient ID"
+                  value={patientId}
+                  onChange={(e) => setPatientId(e.target.value)}
+                  required
+                />
+              )}
             </div>
 
             <div className="form-group">
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Doctor ID</label>
-              <input
-                type="number"
-                className="form-input"
-                placeholder="Doctor ID"
-                value={doctorId}
-                onChange={(e) => setDoctorId(e.target.value)}
-                required
-              />
+              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Select Doctor</label>
+              {doctors.length > 0 ? (
+                <select
+                  className="form-input role-select"
+                  value={doctorId}
+                  onChange={(e) => setDoctorId(e.target.value)}
+                  required
+                  disabled={currentUser?.role === "DOCTOR"}
+                >
+                  {doctors.map(d => (
+                    <option key={d.DoctorID} value={d.DoctorID}>
+                      Dr. {d.user?.FullName || `Doctor #${d.DoctorID}`} - {d.Specialty || "General"} (ID: {d.DoctorID})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="number"
+                  className="form-input"
+                  placeholder="Doctor ID"
+                  value={doctorId}
+                  onChange={(e) => setDoctorId(e.target.value)}
+                  required
+                />
+              )}
             </div>
 
             <div className="form-group">

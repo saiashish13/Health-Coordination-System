@@ -16,16 +16,28 @@ function Patients() {
 
   useEffect(() => {
     patientApi.getAll()
-      .then(res => setPatients(res))
+      .then(res => setPatients(res || []))
       .catch(err => console.error("Error fetching patients", err))
       .finally(() => setLoading(false));
   }, []);
 
   const filtered = patients.filter(p => {
-    const search = searchTerm.toLowerCase();
-    const name = p.user?.FullName || `Patient #${p.PatientID}`;
-    const email = p.user?.Email || "";
-    return name.toLowerCase().includes(search) || email.toLowerCase().includes(search);
+    const search = searchTerm.toLowerCase().trim();
+    if (!search) return true;
+
+    const patId = String(p.PatientID || p.id || "").toLowerCase();
+    const name = (p.user?.FullName || p.FullName || `Patient #${p.PatientID}`).toLowerCase();
+    const email = (p.user?.Email || p.Email || "").toLowerCase();
+    const gender = (p.Gender || "").toLowerCase();
+    const bloodType = (p.BloodType || "").toLowerCase();
+    const emergency = (p.EmergencyContact || "").toLowerCase();
+
+    return name.includes(search) || 
+           email.includes(search) ||
+           patId.includes(search) ||
+           gender.includes(search) ||
+           bloodType.includes(search) ||
+           emergency.includes(search);
   });
 
   return (
@@ -47,7 +59,7 @@ function Patients() {
               <input
                 type="text"
                 className="search-input"
-                placeholder="Search by patient name or email..."
+                placeholder="Search by patient name, email, Patient ID, blood type or contact..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -73,15 +85,15 @@ function Patients() {
                   {filtered.length === 0 ? (
                     <tr>
                       <td colSpan={6} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
-                        No patients found.
+                        No patients found matching your search.
                       </td>
                     </tr>
                   ) : (
                     filtered.map((p) => (
                       <tr key={p.PatientID}>
                         <td style={{ fontWeight: "700" }}>#{p.PatientID}</td>
-                        <td style={{ fontWeight: "600" }}>{p.user?.FullName || "N/A"}</td>
-                        <td>{p.user?.Email || "N/A"}</td>
+                        <td style={{ fontWeight: "600" }}>{p.user?.FullName || p.FullName || `Patient #${p.PatientID}`}</td>
+                        <td>{p.user?.Email || p.Email || "N/A"}</td>
                         <td>{p.Gender || "Unspecified"}</td>
                         <td><Badge status="ACTIVE" text={p.BloodType || "O+"} /></td>
                         <td>{p.EmergencyContact || "N/A"}</td>

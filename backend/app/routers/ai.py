@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.ai_interaction import AIInteraction
 from app.models.ai_recommendation import AIRecommendation
+from app.models.medical_record import MedicalRecord
 from app.models.patient import Patient
 from app.models.doctor import Doctor
 from app.models.user import User
@@ -56,6 +57,10 @@ def get_ai_interactions(
 ):
     if current_user.Role == "PATIENT" and current_user.patient_profile:
         return db.query(AIInteraction).filter(AIInteraction.PatientID == current_user.patient_profile.PatientID).all()
+    elif current_user.Role == "DOCTOR" and current_user.doctor_profile:
+        records = db.query(MedicalRecord).filter(MedicalRecord.DoctorID == current_user.doctor_profile.DoctorID).all()
+        pat_ids = list(set([r.PatientID for r in records]))
+        return db.query(AIInteraction).filter(AIInteraction.PatientID.in_(pat_ids)).all() if pat_ids else []
     return db.query(AIInteraction).all()
 
 @router.get("/interactions/{interaction_id}", response_model=AIInteractionOut)
@@ -76,6 +81,12 @@ def get_ai_recommendations(
 ):
     if current_user.Role == "PATIENT" and current_user.patient_profile:
         return db.query(AIRecommendation).filter(AIRecommendation.PatientID == current_user.patient_profile.PatientID).all()
+    elif current_user.Role == "DOCTOR" and current_user.doctor_profile:
+        records = db.query(MedicalRecord).filter(MedicalRecord.DoctorID == current_user.doctor_profile.DoctorID).all()
+        rec_ids = [r.RecordID for r in records]
+        return db.query(AIRecommendation).filter(
+            (AIRecommendation.RecordID.in_(rec_ids)) | (AIRecommendation.ReviewedByDoctor == current_user.doctor_profile.DoctorID)
+        ).all() if rec_ids else db.query(AIRecommendation).filter(AIRecommendation.ReviewedByDoctor == current_user.doctor_profile.DoctorID).all()
     return db.query(AIRecommendation).all()
 
 @router.get("/recommendations/{recommendation_id}", response_model=AIRecommendationOut)

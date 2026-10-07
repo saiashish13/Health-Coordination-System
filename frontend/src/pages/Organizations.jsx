@@ -16,15 +16,28 @@ function Organizations() {
 
   useEffect(() => {
     organizationApi.getAll()
-      .then(res => setOrganizations(res))
+      .then(res => setOrganizations(res || []))
       .catch(err => console.error("Error fetching organizations", err))
       .finally(() => setLoading(false));
   }, []);
 
   const filtered = organizations.filter(o => {
-    const search = searchTerm.toLowerCase();
-    return (o.OrganizationName || "").toLowerCase().includes(search) || 
-           (o.Type || "").toLowerCase().includes(search);
+    const search = searchTerm.toLowerCase().trim();
+    if (!search) return true;
+
+    const orgId = String(o.OrganizationID || o.id || "").toLowerCase();
+    const name = (o.OrganizationName || o.name || "").toLowerCase();
+    const type = (o.OrganizationType || o.Type || "").toLowerCase();
+    const addr = (o.Address || "").toLowerCase();
+    const phone = (o.Phone || "").toLowerCase();
+    const email = (o.Email || "").toLowerCase();
+
+    return name.includes(search) || 
+           type.includes(search) ||
+           orgId.includes(search) ||
+           addr.includes(search) ||
+           phone.includes(search) ||
+           email.includes(search);
   });
 
   return (
@@ -46,7 +59,7 @@ function Organizations() {
               <input
                 type="text"
                 className="search-input"
-                placeholder="Search by organization name or type..."
+                placeholder="Search by organization name, type (Hospital, Lab, Pharmacy), address or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -65,13 +78,14 @@ function Organizations() {
                     <th>Type</th>
                     <th>Address</th>
                     <th>Contact Phone</th>
+                    <th>Email</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={5} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
-                        No organizations found.
+                      <td colSpan={6} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
+                        No healthcare organizations found matching your search.
                       </td>
                     </tr>
                   ) : (
@@ -79,9 +93,10 @@ function Organizations() {
                       <tr key={o.OrganizationID}>
                         <td style={{ fontWeight: "700" }}>#{o.OrganizationID}</td>
                         <td style={{ fontWeight: "600", color: "var(--primary)" }}>{o.OrganizationName}</td>
-                        <td><Badge status="ACTIVE" text={o.Type} /></td>
+                        <td><Badge status="ACTIVE" text={o.OrganizationType || o.Type || "HOSPITAL"} /></td>
                         <td>{o.Address || "Main Medical Campus"}</td>
                         <td>{o.Phone || "+1 (800) 555-0199"}</td>
+                        <td>{o.Email || "info@healthcare.org"}</td>
                       </tr>
                     ))
                   )}

@@ -5,45 +5,57 @@ import BackgroundBlobs from "../components/BackgroundBlobs";
 import PageHeader from "../components/PageHeader";
 import Modal from "../components/Modal";
 import SkeletonLoader from "../components/SkeletonLoader";
-import { medicalRecordApi, getUserSession } from "../services/api";
+import { medicalRecordApi, patientApi, doctorApi, getUserSession } from "../services/api";
+import { filterByRole } from "../utils/roleFilter";
 import { useToast } from "../context/ToastContext";
 import { FileText, Plus, Search } from "lucide-react";
 import "../styles/Dashboard.css";
 
 function MedicalRecords() {
   const [records, setRecords] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   
-  const [patientId, setPatientId] = useState("");
+  const currentUser = getUserSession();
+  const [patientId, setPatientId] = useState(() => currentUser?.role === "PATIENT" ? currentUser?.profile_id || "" : "");
   const [symptoms, setSymptoms] = useState("");
   const [clinicalNotes, setClinicalNotes] = useState("");
 
-  const currentUser = getUserSession();
   const { addToast } = useToast();
 
-  const loadRecords = () => {
+  const loadData = () => {
     setLoading(true);
-    medicalRecordApi.getAll()
-      .then(res => setRecords(res))
-      .catch(err => console.error("Error fetching medical records", err))
+    Promise.all([
+      medicalRecordApi.getAll().catch(() => []),
+      patientApi.getAll().catch(() => []),
+      doctorApi.getAll().catch(() => [])
+    ])
+      .then(([recs, pats, docs]) => {
+        setRecords(recs || []);
+        setPatients(pats || []);
+        setDoctors(docs || []);
+        if (pats?.length > 0 && !patientId) setPatientId(pats[0].PatientID);
+      })
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    medicalRecordApi.getAll()
-      .then(res => setRecords(res))
-      .catch(err => console.error("Error fetching medical records", err))
-      .finally(() => setLoading(false));
+    loadData();
   }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (!patientId || !symptoms) {
+      addToast("Please select patient and enter symptoms", "warning");
+      return;
+    }
     try {
       await medicalRecordApi.create({
         PatientID: parseInt(patientId),
-        DoctorID: currentUser?.profile_id || 1,
+        DoctorID: currentUser?.profile_id || (doctors[0]?.DoctorID || 1),
         Symptoms: symptoms,
         ClinicalNotes: clinicalNotes
       });
@@ -51,20 +63,31 @@ function MedicalRecords() {
       setShowAddForm(false);
       setSymptoms("");
       setClinicalNotes("");
-      loadRecords();
+      loadData();
     } catch (err) {
       addToast(err.message || "Failed to create medical record", "error");
     }
   };
 
-  const filtered = records.filter(r => {
-    const search = searchTerm.toLowerCase();
-    const patientName = r.patient?.user?.FullName || `Patient #${r.PatientID}`;
-    const doctorName = r.doctor?.user?.FullName || `Doctor #${r.DoctorID}`;
-    return patientName.toLowerCase().includes(search) || 
-           doctorName.toLowerCase().includes(search) || 
-           (r.Symptoms || "").toLowerCase().includes(search) ||
-           (r.ClinicalNotes || "").toLowerCase().includes(search);
+  const roleFiltered = filterByRole(records, currentUser);
+
+  const filtered = roleFiltered.filter(r => {
+    const search = searchTerm.toLowerCase().trim();
+    if (!search) return true;
+
+    const recId = String(r.RecordID || r.id || "").toLowerCase();
+    const patientName = (r.patient?.user?.FullName || r.patient?.FullName || r.PatientName || `Patient #${r.PatientID || ""}`).toLowerCase();
+    const doctorName = (r.doctor?.user?.FullName || r.doctor?.FullName || r.DoctorName || `Doctor #${r.DoctorID || ""}`).toLowerCase();
+    const symptomsText = (r.Symptoms || r.symptoms || "").toLowerCase();
+    const notesText = (r.ClinicalNotes || r.clinical_notes || "").toLowerCase();
+    const dateText = r.RecordDate ? new Date(r.RecordDate).toLocaleDateString().toLowerCase() : "";
+
+    return patientName.includes(search) || 
+           doctorName.includes(search) || 
+           symptomsText.includes(search) ||
+           notesText.includes(search) ||
+           recId.includes(search) ||
+           dateText.includes(search);
   });
 
   return (
@@ -75,10 +98,10 @@ function MedicalRecords() {
       <div className="dashboard-content">
         <PageHeader 
           title="Medical Records" 
-          subtitle="Review and record patient clinical documentation and history logs"
+          subtitle={currentUser?.role === "DOCTOR" ? "My documented clinical patient medical history" : currentUser?.role === "PATIENT" ? "My official medical records & health history" : "Review and record patient clinical documentation"}
           icon={FileText}
           actions={
-            (currentUser?.role === "DOCTOR" || currentUser?.role === "ADMIN") && (
+            (currentUser?.role === "DOCTOR" || currentUser?.role === "ADMIN" || currentUser?.role === "HOSPITAL") && (
               <button className="btn-primary" onClick={() => setShowAddForm(true)}>
                 <Plus size={18} />
                 <span>Create Medical Record</span>
@@ -94,7 +117,7 @@ function MedicalRecords() {
               <input
                 type="text"
                 className="search-input"
-                placeholder="Search by patient, doctor or symptoms..."
+                placeholder="Search by patient, doctor, symptoms, notes or Record ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -120,18 +143,18 @@ function MedicalRecords() {
                   {filtered.length === 0 ? (
                     <tr>
                       <td colSpan={6} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
-                        No medical records found.
+                        No medical records found matching your profile and search.
                       </td>
                     </tr>
                   ) : (
                     filtered.map((r) => (
                       <tr key={r.RecordID}>
                         <td style={{ fontWeight: "700" }}>#{r.RecordID}</td>
-                        <td>{r.patient?.user?.FullName || `Patient #${r.PatientID}`}</td>
-                        <td>{r.doctor?.user?.FullName || `Doctor #${r.DoctorID}`}</td>
+                        <td style={{ fontWeight: "600" }}>{r.patient?.user?.FullName || r.patient?.FullName || `Patient #${r.PatientID}`}</td>
+                        <td style={{ fontWeight: "600", color: "var(--primary)" }}>Dr. {r.doctor?.user?.FullName || r.doctor?.FullName || `Doctor #${r.DoctorID}`}</td>
                         <td>{new Date(r.RecordDate).toLocaleDateString()}</td>
-                        <td>{r.Symptoms}</td>
-                        <td>{r.ClinicalNotes}</td>
+                        <td>{r.Symptoms || "N/A"}</td>
+                        <td>{r.ClinicalNotes || "N/A"}</td>
                       </tr>
                     ))
                   )}
@@ -148,16 +171,32 @@ function MedicalRecords() {
           title="New Medical Record Entry"
         >
           <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            
             <div className="form-group">
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Patient ID</label>
-              <input
-                type="number"
-                className="form-input"
-                placeholder="Patient ID"
-                value={patientId}
-                onChange={(e) => setPatientId(e.target.value)}
-                required
-              />
+              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Select Patient</label>
+              {patients.length > 0 ? (
+                <select
+                  className="form-input role-select"
+                  value={patientId}
+                  onChange={(e) => setPatientId(e.target.value)}
+                  required
+                >
+                  {patients.map(p => (
+                    <option key={p.PatientID} value={p.PatientID}>
+                      {p.user?.FullName || `Patient #${p.PatientID}`} (ID: {p.PatientID})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="number"
+                  className="form-input"
+                  placeholder="Patient ID"
+                  value={patientId}
+                  onChange={(e) => setPatientId(e.target.value)}
+                  required
+                />
+              )}
             </div>
 
             <div className="form-group">
@@ -165,7 +204,7 @@ function MedicalRecords() {
               <textarea
                 className="form-input"
                 rows={3}
-                placeholder="Describe symptoms..."
+                placeholder="Describe symptoms presented by patient..."
                 value={symptoms}
                 onChange={(e) => setSymptoms(e.target.value)}
                 style={{ height: "auto" }}
@@ -178,7 +217,7 @@ function MedicalRecords() {
               <textarea
                 className="form-input"
                 rows={3}
-                placeholder="Doctor's notes..."
+                placeholder="Doctor's clinical findings and diagnostic plan..."
                 value={clinicalNotes}
                 onChange={(e) => setClinicalNotes(e.target.value)}
                 style={{ height: "auto" }}

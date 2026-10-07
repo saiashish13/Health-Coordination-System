@@ -16,18 +16,28 @@ function PatientDoctorAccess() {
 
   useEffect(() => {
     permissionApi.getDoctorAccessLinks()
-      .then(res => setAccessLinks(res))
+      .then(res => setAccessLinks(res || []))
       .catch(err => console.error("Error fetching access links", err))
       .finally(() => setLoading(false));
   }, []);
 
   const filtered = accessLinks.filter(acc => {
-    const search = searchTerm.toLowerCase();
-    const patientName = acc.patient?.user?.FullName || `Patient #${acc.PatientID}`;
-    const doctorName = acc.doctor?.user?.FullName || `Doctor #${acc.DoctorID}`;
-    return patientName.toLowerCase().includes(search) || 
-           doctorName.toLowerCase().includes(search) ||
-           String(acc.AccessID).includes(search);
+    const search = searchTerm.toLowerCase().trim();
+    if (!search) return true;
+
+    const accId = String(acc.AccessID || acc.id || "").toLowerCase();
+    const patientName = (acc.patient?.user?.FullName || acc.patient?.FullName || `Patient #${acc.PatientID}`).toLowerCase();
+    const doctorName = (acc.doctor?.user?.FullName || acc.doctor?.FullName || `Doctor #${acc.DoctorID}`).toLowerCase();
+    const statusText = (acc.Status || "").toLowerCase();
+    const grantedText = acc.GrantedAt ? new Date(acc.GrantedAt).toLocaleDateString().toLowerCase() : "";
+    const expiresText = acc.ExpiresAt ? new Date(acc.ExpiresAt).toLocaleDateString().toLowerCase() : "";
+
+    return patientName.includes(search) || 
+           doctorName.includes(search) ||
+           accId.includes(search) ||
+           statusText.includes(search) ||
+           grantedText.includes(search) ||
+           expiresText.includes(search);
   });
 
   return (
@@ -49,7 +59,7 @@ function PatientDoctorAccess() {
               <input
                 type="text"
                 className="search-input"
-                placeholder="Search by Access ID, patient or doctor..."
+                placeholder="Search by Access ID, patient, doctor or status..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -75,15 +85,15 @@ function PatientDoctorAccess() {
                   {filtered.length === 0 ? (
                     <tr>
                       <td colSpan={6} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
-                        No doctor access links found.
+                        No doctor access links found matching your search.
                       </td>
                     </tr>
                   ) : (
                     filtered.map((acc) => (
                       <tr key={acc.AccessID}>
                         <td style={{ fontWeight: "700" }}>#{acc.AccessID}</td>
-                        <td>{acc.patient?.user?.FullName || `Patient #${acc.PatientID}`}</td>
-                        <td>{acc.doctor?.user?.FullName || `Doctor #${acc.DoctorID}`}</td>
+                        <td style={{ fontWeight: "600" }}>{acc.patient?.user?.FullName || acc.patient?.FullName || `Patient #${acc.PatientID}`}</td>
+                        <td style={{ fontWeight: "600", color: "var(--primary)" }}>Dr. {acc.doctor?.user?.FullName || acc.doctor?.FullName || `Doctor #${acc.DoctorID}`}</td>
                         <td>{acc.GrantedAt ? new Date(acc.GrantedAt).toLocaleDateString() : "N/A"}</td>
                         <td>{acc.ExpiresAt ? new Date(acc.ExpiresAt).toLocaleDateString() : "Permanent / Revocable"}</td>
                         <td><Badge status={acc.Status} /></td>

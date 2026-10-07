@@ -16,6 +16,14 @@ def get_all_diagnoses(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if current_user.Role == "PATIENT" and current_user.patient_profile:
+        records = db.query(MedicalRecord).filter(MedicalRecord.PatientID == current_user.patient_profile.PatientID).all()
+        rec_ids = [r.RecordID for r in records]
+        return db.query(Diagnosis).filter(Diagnosis.RecordID.in_(rec_ids)).all() if rec_ids else []
+    elif current_user.Role == "DOCTOR" and current_user.doctor_profile:
+        records = db.query(MedicalRecord).filter(MedicalRecord.DoctorID == current_user.doctor_profile.DoctorID).all()
+        rec_ids = [r.RecordID for r in records]
+        return db.query(Diagnosis).filter(Diagnosis.RecordID.in_(rec_ids)).all() if rec_ids else []
     return db.query(Diagnosis).all()
 
 @router.post("/medical-records/{record_id}/diagnoses", response_model=DiagnosisOut)
