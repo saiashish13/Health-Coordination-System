@@ -21,6 +21,7 @@ function Appointments() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   
   const [patientId, setPatientId] = useState(() => currentUser?.role === "PATIENT" ? currentUser?.profile_id || "" : "");
@@ -86,6 +87,9 @@ function Appointments() {
   const roleFiltered = filterByRole(appointments, currentUser);
 
   const filtered = roleFiltered.filter(a => {
+    if (statusFilter !== "ALL" && (a.Status || "").toUpperCase() !== statusFilter) {
+      return false;
+    }
     const search = searchTerm.toLowerCase().trim();
     if (!search) return true;
 
@@ -112,28 +116,45 @@ function Appointments() {
       <div className="dashboard-content">
         <PageHeader 
           title="Appointments Management" 
-          subtitle={currentUser?.role === "DOCTOR" ? "My upcoming patient clinical appointments" : currentUser?.role === "PATIENT" ? "My scheduled healthcare appointments" : "View, schedule, and update patient clinical appointments"}
+          subtitle={currentUser?.role === "DOCTOR" ? "My patient clinical appointments & scheduled requests" : currentUser?.role === "PATIENT" ? "My scheduled healthcare appointments" : "View, schedule, and update patient clinical appointments"}
           icon={Calendar}
           actions={
-            <button className="btn-primary" onClick={() => setShowScheduleForm(true)}>
-              <Plus size={18} />
-              <span>Schedule Appointment</span>
-            </button>
+            currentUser?.role !== "DOCTOR" ? (
+              <button className="btn-primary" onClick={() => setShowScheduleForm(true)}>
+                <Plus size={18} />
+                <span>Schedule Appointment</span>
+              </button>
+            ) : null
           }
         />
 
         {/* Search & Toolbar */}
         <div className="table-card-wrapper">
-          <div className="table-toolbar">
-            <div className="search-filter-box">
-              <Search size={16} className="search-icon-inside" />
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Search by patient, doctor, status, date or reason..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="table-toolbar" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", width: "100%" }}>
+              <div className="search-filter-box" style={{ flex: 1, minWidth: "260px" }}>
+                <Search size={16} className="search-icon-inside" />
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder="Search by patient, doctor, status, date or reason..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="status-tabs" style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                {["ALL", "SCHEDULED", "CONFIRMED", "COMPLETED", "CANCELLED"].map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setStatusFilter(st)}
+                    className={`btn-xs ${statusFilter === st ? "btn-primary" : "btn-secondary"}`}
+                    style={{ borderRadius: "20px" }}
+                  >
+                    {st === "SCHEDULED" ? "Scheduled" : st === "ALL" ? "All" : st.charAt(0) + st.slice(1).toLowerCase()}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -171,31 +192,42 @@ function Appointments() {
                         <td>{a.Reason || "Routine Checkup"}</td>
                         <td>
                           <div className="action-btn-group">
-                            <button
-                              onClick={() => handleStatusChange(a.AppointmentID, "CONFIRMED")}
-                              className="btn-secondary btn-xs"
-                              title="Confirm"
-                            >
-                              <Check size={14} color="var(--success)" />
-                              Confirm
-                            </button>
-                            <button
-                              onClick={() => handleStatusChange(a.AppointmentID, "COMPLETED")}
-                              className="btn-secondary btn-xs"
-                              title="Complete"
-                            >
-                              <Clock size={14} color="var(--primary)" />
-                              Complete
-                            </button>
-                            <button
-                              onClick={() => handleStatusChange(a.AppointmentID, "CANCELLED")}
-                              className="btn-ghost btn-xs"
-                              style={{ color: "var(--error)" }}
-                              title="Cancel"
-                            >
-                              <XCircle size={14} />
-                              Cancel
-                            </button>
+                            {(a.Status === "SCHEDULED" || a.Status === "PENDING") && (
+                              <button
+                                onClick={() => handleStatusChange(a.AppointmentID, "CONFIRMED")}
+                                className="btn-secondary btn-xs"
+                                style={{ color: "var(--success)", borderColor: "var(--success)" }}
+                                title="Confirm Appointment"
+                              >
+                                <Check size={14} />
+                                Confirm
+                              </button>
+                            )}
+                            {a.Status === "CONFIRMED" && (
+                              <button
+                                onClick={() => handleStatusChange(a.AppointmentID, "COMPLETED")}
+                                className="btn-secondary btn-xs"
+                                style={{ color: "var(--primary)" }}
+                                title="Mark Completed"
+                              >
+                                <Clock size={14} />
+                                Complete
+                              </button>
+                            )}
+                            {a.Status !== "COMPLETED" && a.Status !== "CANCELLED" && (
+                              <button
+                                onClick={() => handleStatusChange(a.AppointmentID, "CANCELLED")}
+                                className="btn-ghost btn-xs"
+                                style={{ color: "var(--error)" }}
+                                title="Cancel Appointment"
+                              >
+                                <XCircle size={14} />
+                                Cancel
+                              </button>
+                            )}
+                            {(a.Status === "COMPLETED" || a.Status === "CANCELLED") && (
+                              <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>None</span>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -216,29 +248,21 @@ function Appointments() {
           <form onSubmit={handleSchedule} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             
             <div className="form-group">
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Select Patient</label>
-              {patients.length > 0 ? (
-                <select
-                  className="form-input role-select"
-                  value={patientId}
-                  onChange={(e) => setPatientId(e.target.value)}
-                  required
-                  disabled={currentUser?.role === "PATIENT"}
-                >
-                  {patients.map(p => (
-                    <option key={p.PatientID} value={p.PatientID}>
-                      {p.user?.FullName || `Patient #${p.PatientID}`} (ID: {p.PatientID})
-                    </option>
-                  ))}
-                </select>
-              ) : (
+              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Patient Info</label>
+              {currentUser?.role === "PATIENT" ? (
                 <input
-                  type="number"
+                  type="text"
                   className="form-input"
-                  placeholder="Enter Patient ID (e.g. 1)"
+                  value={`${currentUser.full_name || currentUser.fullName || currentUser.email || "Patient"} (ID: #${currentUser.profile_id || 1})`}
+                  disabled
+                  style={{ background: "rgba(99, 102, 241, 0.08)", fontWeight: "600", color: "var(--primary)" }}
+                />
+              ) : (
+                <PatientSelector
+                  patients={patients}
                   value={patientId}
-                  onChange={(e) => setPatientId(e.target.value)}
-                  required
+                  onChange={setPatientId}
+                  placeholder="Search patient by Name or ID..."
                 />
               )}
             </div>

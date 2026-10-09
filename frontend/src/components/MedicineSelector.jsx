@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { WORLD_MEDICINES, MEDICINE_CATEGORIES, searchWorldMedicines } from "../data/worldMedicines";
+import { medicineApi } from "../services/api";
 import { Search, Pill, Check, Plus, Globe, ChevronDown } from "lucide-react";
 
 export default function MedicineSelector({ value, onChange, onSelectMedicineDetails, placeholder = "Search & select medicine from world catalog..." }) {
@@ -37,9 +38,20 @@ export default function MedicineSelector({ value, onChange, onSelectMedicineDeta
     setIsOpen(false);
   };
 
-  const handleAddCustom = () => {
+  const handleAddCustom = async () => {
     const nameToAdd = searchTerm.trim() || customMedicine.trim();
     if (nameToAdd) {
+      try {
+        await medicineApi.create({
+          MedicineName: nameToAdd,
+          GenericName: nameToAdd,
+          DosageForm: "Tablet / Capsule",
+          Manufacturer: "Custom Prescribed"
+        }).catch(() => {});
+      } catch {
+        // ignore if already exists or fallback
+      }
+
       onChange(nameToAdd);
       if (onSelectMedicineDetails) {
         onSelectMedicineDetails({
@@ -47,7 +59,7 @@ export default function MedicineSelector({ value, onChange, onSelectMedicineDeta
           genericName: nameToAdd,
           form: "Tablet / Capsule",
           defaultDosage: "As directed by physician",
-          manufacturer: "Global Pharmaceutical"
+          manufacturer: "Custom Prescribed"
         });
       }
       setIsOpen(false);

@@ -45,9 +45,13 @@ def create_access_request(
 
     if patient.user:
         notification_service.create_notification(
-            db, patient.user.UserID, "Permission Request Received",
-            f"Dr. {current_user.FullName} has requested access to your medical records."
+            db, patient.user.UserID, "Access Permission Requested",
+            f"Dr. {current_user.FullName} has requested access to view your medical records."
         )
+    notification_service.create_notification(
+        db, current_user.UserID, "Permission Request Sent",
+        f"You requested medical access for Patient ID #{req.PatientID} ({patient.user.FullName if patient.user else 'Patient'})."
+    )
 
     audit_service.log_access(db, current_user.UserID, "PermissionRequest", req.PatientID, perm_req.RequestID, "ADD")
     return perm_req
@@ -130,9 +134,13 @@ def approve_access_request(
 
     if req.doctor and req.doctor.user:
         notification_service.create_notification(
-            db, req.doctor.user.UserID, "Access Request Approved",
-            f"Patient #{req.PatientID} approved your medical record access request."
+            db, req.doctor.user.UserID, "Access Permission Confirmed (Approved)",
+            f"Patient ID #{req.PatientID} ({current_user.FullName}) approved and confirmed your medical access request."
         )
+    notification_service.create_notification(
+        db, current_user.UserID, "Access Permission Confirmed",
+        f"You have confirmed and granted medical record access to Dr. {req.doctor.user.FullName if req.doctor and req.doctor.user else ''}."
+    )
 
     audit_service.log_access(db, current_user.UserID, "PermissionRequest", req.PatientID, request_id, "EDIT")
     return req
@@ -153,9 +161,13 @@ def reject_access_request(
 
     if req.doctor and req.doctor.user:
         notification_service.create_notification(
-            db, req.doctor.user.UserID, "Access Request Rejected",
-            f"Patient #{req.PatientID} declined your access request."
+            db, req.doctor.user.UserID, "Access Permission Denied (Rejected)",
+            f"Patient ID #{req.PatientID} ({current_user.FullName}) declined your medical record access request."
         )
+    notification_service.create_notification(
+        db, current_user.UserID, "Access Permission Denied",
+        f"You declined access request from Dr. {req.doctor.user.FullName if req.doctor and req.doctor.user else ''}."
+    )
 
     return req
 
@@ -181,6 +193,13 @@ def revoke_access_request(
 
     db.commit()
     db.refresh(req)
+
+    if req.doctor and req.doctor.user:
+        notification_service.create_notification(
+            db, req.doctor.user.UserID, "Access Permission Revoked",
+            f"Patient ID #{req.PatientID} revoked your access permissions."
+        )
+
     return req
 
 @router.get("/patient-doctor-access", response_model=List[PatientDoctorAccessOut])

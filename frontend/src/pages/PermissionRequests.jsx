@@ -6,6 +6,7 @@ import PageHeader from "../components/PageHeader";
 import Badge from "../components/Badge";
 import Modal from "../components/Modal";
 import SkeletonLoader from "../components/SkeletonLoader";
+import PatientSelector from "../components/PatientSelector";
 import { permissionApi, patientApi, doctorApi, getUserSession } from "../services/api";
 import { filterByRole } from "../utils/roleFilter";
 import { useToast } from "../context/ToastContext";
@@ -21,6 +22,7 @@ function PermissionRequests() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [showForm, setShowForm] = useState(false);
   const [patientId, setPatientId] = useState(() => currentUser?.role === "PATIENT" ? currentUser?.profile_id || "" : "");
   const [doctorId, setDoctorId] = useState(() => currentUser?.role === "DOCTOR" ? currentUser?.profile_id || "" : "");
@@ -92,6 +94,11 @@ function PermissionRequests() {
   const roleFiltered = filterByRole(requests, currentUser);
 
   const filtered = roleFiltered.filter(r => {
+    const st = (r.Status || "").toUpperCase();
+    if (statusFilter === "APPROVED" && st !== "APPROVED") return false;
+    if (statusFilter === "REJECTED" && st !== "REJECTED" && st !== "REVOKED") return false;
+    if (statusFilter === "PENDING" && st !== "PENDING") return false;
+
     const search = searchTerm.toLowerCase().trim();
     if (!search) return true;
 
@@ -118,7 +125,7 @@ function PermissionRequests() {
       <div className="dashboard-content">
         <PageHeader 
           title="Patient Access Permissions" 
-          subtitle={currentUser?.role === "DOCTOR" ? "My pending & approved patient record access requests" : currentUser?.role === "PATIENT" ? "My record access authorization requests & consent history" : "Manage HIPAA consent and data sharing authorization requests"}
+          subtitle={currentUser?.role === "DOCTOR" ? "My confirmed (approved), unconfirmed (denied), and pending patient access permissions" : currentUser?.role === "PATIENT" ? "My record access authorization requests & consent history" : "Manage HIPAA consent and data sharing authorization requests"}
           icon={ShieldCheck}
           actions={
             <button className="btn-primary" onClick={() => setShowForm(true)}>
@@ -129,16 +136,49 @@ function PermissionRequests() {
         />
 
         <div className="table-card-wrapper">
-          <div className="table-toolbar">
-            <div className="search-filter-box">
-              <Search size={16} className="search-icon-inside" />
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Search by Request ID, Patient, Doctor, reason or status..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="table-toolbar" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", width: "100%" }}>
+              <div className="search-filter-box" style={{ flex: 1, minWidth: "260px" }}>
+                <Search size={16} className="search-icon-inside" />
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder="Search by Request ID, Patient, Doctor, reason or status..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="status-tabs" style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                <button
+                  onClick={() => setStatusFilter("ALL")}
+                  className={`btn-xs ${statusFilter === "ALL" ? "btn-primary" : "btn-secondary"}`}
+                  style={{ borderRadius: "20px" }}
+                >
+                  All Permissions
+                </button>
+                <button
+                  onClick={() => setStatusFilter("APPROVED")}
+                  className={`btn-xs ${statusFilter === "APPROVED" ? "btn-primary" : "btn-secondary"}`}
+                  style={{ borderRadius: "20px" }}
+                >
+                  Confirmed (Approved)
+                </button>
+                <button
+                  onClick={() => setStatusFilter("REJECTED")}
+                  className={`btn-xs ${statusFilter === "REJECTED" ? "btn-primary" : "btn-secondary"}`}
+                  style={{ borderRadius: "20px" }}
+                >
+                  Unconfirmed (Denied)
+                </button>
+                <button
+                  onClick={() => setStatusFilter("PENDING")}
+                  className={`btn-xs ${statusFilter === "PENDING" ? "btn-primary" : "btn-secondary"}`}
+                  style={{ borderRadius: "20px" }}
+                >
+                  Pending
+                </button>
+              </div>
             </div>
           </div>
 
@@ -210,31 +250,14 @@ function PermissionRequests() {
           <form onSubmit={handleCreateRequest} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             
             <div className="form-group">
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Select Patient</label>
-              {patients.length > 0 ? (
-                <select
-                  className="form-input role-select"
-                  value={patientId}
-                  onChange={(e) => setPatientId(e.target.value)}
-                  required
-                  disabled={currentUser?.role === "PATIENT"}
-                >
-                  {patients.map(p => (
-                    <option key={p.PatientID} value={p.PatientID}>
-                      {p.user?.FullName || `Patient #${p.PatientID}`} (ID: {p.PatientID})
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type="number"
-                  className="form-input"
-                  placeholder="Patient ID"
-                  value={patientId}
-                  onChange={(e) => setPatientId(e.target.value)}
-                  required
-                />
-              )}
+              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Select Patient (Search by Name or ID)</label>
+              <PatientSelector
+                patients={patients}
+                value={patientId}
+                onChange={setPatientId}
+                disabled={currentUser?.role === "PATIENT"}
+                placeholder="Search patient by Name or ID (e.g. John or 1)..."
+              />
             </div>
 
             <div className="form-group">

@@ -41,7 +41,6 @@ function PatientDashboard() {
           icon={HeartPulse}
         />
 
-
         {loading ? (
           <SkeletonLoader type="card" />
         ) : (

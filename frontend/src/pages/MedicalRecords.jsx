@@ -5,6 +5,7 @@ import BackgroundBlobs from "../components/BackgroundBlobs";
 import PageHeader from "../components/PageHeader";
 import Modal from "../components/Modal";
 import SkeletonLoader from "../components/SkeletonLoader";
+import PatientSelector from "../components/PatientSelector";
 import { medicalRecordApi, patientApi, doctorApi, getUserSession } from "../services/api";
 import { filterByRole } from "../utils/roleFilter";
 import { useToast } from "../context/ToastContext";
@@ -18,6 +19,7 @@ function MedicalRecords() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [viewingRecord, setViewingRecord] = useState(null);
   
   const currentUser = getUserSession();
   const [patientId, setPatientId] = useState(() => currentUser?.role === "PATIENT" ? currentUser?.profile_id || "" : "");
@@ -137,12 +139,13 @@ function MedicalRecords() {
                     <th>Record Date</th>
                     <th>Symptoms</th>
                     <th>Clinical Notes</th>
+                    <th>Actions / Record File</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
+                      <td colSpan={7} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
                         No medical records found matching your profile and search.
                       </td>
                     </tr>
@@ -155,6 +158,16 @@ function MedicalRecords() {
                         <td>{new Date(r.RecordDate).toLocaleDateString()}</td>
                         <td>{r.Symptoms || "N/A"}</td>
                         <td>{r.ClinicalNotes || "N/A"}</td>
+                        <td>
+                          <button
+                            onClick={() => setViewingRecord(r)}
+                            className="btn-secondary btn-xs"
+                            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                          >
+                            <FileText size={14} color="var(--primary)" />
+                            <span>View Record File</span>
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -173,30 +186,13 @@ function MedicalRecords() {
           <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             
             <div className="form-group">
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Select Patient</label>
-              {patients.length > 0 ? (
-                <select
-                  className="form-input role-select"
-                  value={patientId}
-                  onChange={(e) => setPatientId(e.target.value)}
-                  required
-                >
-                  {patients.map(p => (
-                    <option key={p.PatientID} value={p.PatientID}>
-                      {p.user?.FullName || `Patient #${p.PatientID}`} (ID: {p.PatientID})
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type="number"
-                  className="form-input"
-                  placeholder="Patient ID"
-                  value={patientId}
-                  onChange={(e) => setPatientId(e.target.value)}
-                  required
-                />
-              )}
+              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Select Patient (Search by Name or ID)</label>
+              <PatientSelector
+                patients={patients}
+                value={patientId}
+                onChange={setPatientId}
+                placeholder="Search patient by Name or ID (e.g. John or 1)..."
+              />
             </div>
 
             <div className="form-group">
@@ -229,6 +225,61 @@ function MedicalRecords() {
               Save Medical Record
             </button>
           </form>
+        </Modal>
+
+        {/* Modal for Viewing Record File Document */}
+        <Modal
+          isOpen={!!viewingRecord}
+          onClose={() => setViewingRecord(null)}
+          title={`Clinical Record Document #${viewingRecord?.RecordID}`}
+        >
+          {viewingRecord && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "12px", background: "var(--bg-card)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+              <div style={{ borderBottom: "1px solid var(--border-color)", pb: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h3 style={{ margin: 0, color: "var(--primary)" }}>HEALTHSYNC MEDICAL RECORD FILE</h3>
+                  <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Official Clinical Record File • Document ID #{viewingRecord.RecordID}</span>
+                </div>
+                <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>{new Date(viewingRecord.RecordDate).toLocaleDateString()}</span>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", fontSize: "13px" }}>
+                <div>
+                  <strong style={{ color: "var(--text-muted)", display: "block", fontSize: "11px" }}>PATIENT NAME</strong>
+                  <span>{viewingRecord.patient?.user?.FullName || viewingRecord.patient?.FullName || `Patient #${viewingRecord.PatientID}`}</span>
+                </div>
+                <div>
+                  <strong style={{ color: "var(--text-muted)", display: "block", fontSize: "11px" }}>ATTENDING PHYSICIAN</strong>
+                  <span>Dr. {viewingRecord.doctor?.user?.FullName || viewingRecord.doctor?.FullName || `Doctor #${viewingRecord.DoctorID}`}</span>
+                </div>
+              </div>
+
+              <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "12px" }}>
+                <strong style={{ color: "var(--text-muted)", display: "block", fontSize: "11px", marginBottom: "4px" }}>PRESENTING SYMPTOMS</strong>
+                <p style={{ margin: 0, fontSize: "13px", lineHeight: "1.5" }}>{viewingRecord.Symptoms || "No symptoms recorded"}</p>
+              </div>
+
+              <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "12px" }}>
+                <strong style={{ color: "var(--text-muted)", display: "block", fontSize: "11px", marginBottom: "4px" }}>CLINICAL FINDINGS & NOTES</strong>
+                <p style={{ margin: 0, fontSize: "13px", lineHeight: "1.5", color: "var(--text-secondary)" }}>{viewingRecord.ClinicalNotes || viewingRecord.Notes || "Standard assessment recorded"}</p>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "12px" }}>
+                <button
+                  onClick={() => window.print()}
+                  className="btn-secondary btn-xs"
+                >
+                  Print Record File
+                </button>
+                <button
+                  onClick={() => setViewingRecord(null)}
+                  className="btn-primary btn-xs"
+                >
+                  Close Document
+                </button>
+              </div>
+            </div>
+          )}
         </Modal>
 
       </div>

@@ -6,6 +6,7 @@ import PageHeader from "../components/PageHeader";
 import Modal from "../components/Modal";
 import SkeletonLoader from "../components/SkeletonLoader";
 import MedicineSelector from "../components/MedicineSelector";
+import PatientSelector from "../components/PatientSelector";
 import { prescriptionApi, medicineApi, patientApi, doctorApi, getUserSession } from "../services/api";
 import { filterByRole } from "../utils/roleFilter";
 import { useToast } from "../context/ToastContext";
@@ -22,6 +23,7 @@ function Prescriptions() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [viewingPrescriptionDoc, setViewingPrescriptionDoc] = useState(null);
 
   const [patientId, setPatientId] = useState(() => currentUser?.role === "PATIENT" ? currentUser?.profile_id || "" : "");
   const [medicineName, setMedicineName] = useState("Amoxicillin 500mg");
@@ -177,12 +179,13 @@ function Prescriptions() {
                     <th>Doctor</th>
                     <th>Prescription Date</th>
                     <th>Prescribed World Medicines & Dosage</th>
+                    <th>Actions / Prescription PDF File</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={5} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
+                      <td colSpan={6} style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
                         No prescriptions found matching your profile and search.
                       </td>
                     </tr>
@@ -209,6 +212,16 @@ function Prescriptions() {
                             <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>Standard Clinical Order</span>
                           )}
                         </td>
+                        <td>
+                          <button
+                            onClick={() => setViewingPrescriptionDoc(p)}
+                            className="btn-secondary btn-xs"
+                            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                          >
+                            <Pill size={14} color="var(--primary)" />
+                            <span>View Prescription PDF</span>
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -227,30 +240,13 @@ function Prescriptions() {
           <form onSubmit={handleCreatePrescription} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             
             <div className="form-group">
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Select Patient</label>
-              {patients.length > 0 ? (
-                <select
-                  className="form-input role-select"
-                  value={patientId}
-                  onChange={(e) => setPatientId(e.target.value)}
-                  required
-                >
-                  {patients.map(p => (
-                    <option key={p.PatientID} value={p.PatientID}>
-                      {p.user?.FullName || `Patient #${p.PatientID}`} (ID: {p.PatientID})
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type="number"
-                  className="form-input"
-                  placeholder="Enter Patient ID"
-                  value={patientId}
-                  onChange={(e) => setPatientId(e.target.value)}
-                  required
-                />
-              )}
+              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Select Patient (Search by Name or ID)</label>
+              <PatientSelector
+                patients={patients}
+                value={patientId}
+                onChange={setPatientId}
+                placeholder="Search patient by Name or ID (e.g. John or 1)..."
+              />
             </div>
 
             <div className="form-group">
@@ -319,6 +315,74 @@ function Prescriptions() {
               Issue Official Prescription
             </button>
           </form>
+        </Modal>
+
+        {/* Modal for Viewing Prescription PDF Document */}
+        <Modal
+          isOpen={!!viewingPrescriptionDoc}
+          onClose={() => setViewingPrescriptionDoc(null)}
+          title={`Official Prescription File #${viewingPrescriptionDoc?.PrescriptionID}`}
+        >
+          {viewingPrescriptionDoc && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "16px", background: "var(--bg-card)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+              <div style={{ borderBottom: "2px solid var(--primary)", pb: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h3 style={{ margin: 0, color: "var(--primary)" }}>HEALTHSYNC OFFICIAL RX PRESCRIPTION</h3>
+                  <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Certified Clinical Order • Prescription ID #{viewingPrescriptionDoc.PrescriptionID}</span>
+                </div>
+                <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600" }}>Date: {new Date(viewingPrescriptionDoc.PrescriptionDate).toLocaleDateString()}</span>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", fontSize: "13px" }}>
+                <div>
+                  <strong style={{ color: "var(--text-muted)", display: "block", fontSize: "11px" }}>PATIENT NAME</strong>
+                  <span style={{ fontWeight: "600" }}>{viewingPrescriptionDoc.patient?.user?.FullName || viewingPrescriptionDoc.patient?.FullName || `Patient #${viewingPrescriptionDoc.PatientID}`}</span>
+                </div>
+                <div>
+                  <strong style={{ color: "var(--text-muted)", display: "block", fontSize: "11px" }}>PRESCRIBING DOCTOR</strong>
+                  <span style={{ fontWeight: "600", color: "var(--primary)" }}>Dr. {viewingPrescriptionDoc.doctor?.user?.FullName || viewingPrescriptionDoc.doctor?.FullName || `Doctor #${viewingPrescriptionDoc.DoctorID}`}</span>
+                </div>
+              </div>
+
+              <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "12px" }}>
+                <strong style={{ color: "var(--text-muted)", display: "block", fontSize: "11px", marginBottom: "8px" }}>PRESCRIBED WORLD MEDICINES & DOSAGE INSTRUCTIONS</strong>
+                {viewingPrescriptionDoc.items && viewingPrescriptionDoc.items.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {viewingPrescriptionDoc.items.map((item, idx) => (
+                      <div key={idx} style={{ background: "var(--primary-light)", padding: "10px", borderRadius: "var(--radius-sm)", fontSize: "13px" }}>
+                        <div style={{ fontWeight: "700", color: "var(--primary)" }}>{item.medicine?.MedicineName || `Medication #${item.MedicineID}`}</div>
+                        <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                          <strong>Dosage:</strong> {item.Dosage} | <strong>Frequency:</strong> {item.Frequency || "Daily"} | <strong>Duration:</strong> {item.Duration || "Standard course"}
+                        </div>
+                        {item.Instructions && (
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>
+                            <strong>Instructions:</strong> {item.Instructions}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ margin: 0, fontSize: "13px" }}>Standard clinical prescription medication.</p>
+                )}
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "12px" }}>
+                <button
+                  onClick={() => window.print()}
+                  className="btn-secondary btn-xs"
+                >
+                  Print / Download Prescription PDF
+                </button>
+                <button
+                  onClick={() => setViewingPrescriptionDoc(null)}
+                  className="btn-primary btn-xs"
+                >
+                  Close Document
+                </button>
+              </div>
+            </div>
+          )}
         </Modal>
 
       </div>

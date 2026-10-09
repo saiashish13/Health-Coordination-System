@@ -13,6 +13,7 @@ function PatientDoctorAccess() {
   const [accessLinks, setAccessLinks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   useEffect(() => {
     permissionApi.getDoctorAccessLinks()
@@ -22,6 +23,10 @@ function PatientDoctorAccess() {
   }, []);
 
   const filtered = accessLinks.filter(acc => {
+    const st = (acc.Status || "").toUpperCase();
+    if (statusFilter === "ACTIVE" && st !== "ACTIVE") return false;
+    if (statusFilter === "REVOKED" && st !== "REVOKED" && st !== "EXPIRED") return false;
+
     const search = searchTerm.toLowerCase().trim();
     if (!search) return true;
 
@@ -48,21 +53,47 @@ function PatientDoctorAccess() {
       <div className="dashboard-content">
         <PageHeader 
           title="Patient-Doctor Access Links" 
-          subtitle="Active and expired access tokens granting physicians permission to patient medical history"
+          subtitle="Confirmed active & unconfirmed (expired/revoked) access tokens granting permission to patient medical history"
           icon={ShieldCheck}
         />
 
         <div className="table-card-wrapper">
-          <div className="table-toolbar">
-            <div className="search-filter-box">
-              <Search size={16} className="search-icon-inside" />
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Search by Access ID, patient, doctor or status..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="table-toolbar" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", width: "100%" }}>
+              <div className="search-filter-box" style={{ flex: 1, minWidth: "260px" }}>
+                <Search size={16} className="search-icon-inside" />
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder="Search by Access ID, patient, doctor or status..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="status-tabs" style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                <button
+                  onClick={() => setStatusFilter("ALL")}
+                  className={`btn-xs ${statusFilter === "ALL" ? "btn-primary" : "btn-secondary"}`}
+                  style={{ borderRadius: "20px" }}
+                >
+                  All Links
+                </button>
+                <button
+                  onClick={() => setStatusFilter("ACTIVE")}
+                  className={`btn-xs ${statusFilter === "ACTIVE" ? "btn-primary" : "btn-secondary"}`}
+                  style={{ borderRadius: "20px" }}
+                >
+                  Confirmed (Active)
+                </button>
+                <button
+                  onClick={() => setStatusFilter("REVOKED")}
+                  className={`btn-xs ${statusFilter === "REVOKED" ? "btn-primary" : "btn-secondary"}`}
+                  style={{ borderRadius: "20px" }}
+                >
+                  Unconfirmed (Revoked / Expired)
+                </button>
+              </div>
             </div>
           </div>
 

@@ -6,8 +6,9 @@ import PageHeader from "../components/PageHeader";
 import Modal from "../components/Modal";
 import SkeletonLoader from "../components/SkeletonLoader";
 import { labApi, getUserSession } from "../services/api";
+import { filterByRole } from "../utils/roleFilter";
 import { useToast } from "../context/ToastContext";
-import { FlaskConical, Plus, Search, FileUp, ExternalLink } from "lucide-react";
+import { FlaskConical, Plus, Search, FileUp, ExternalLink, FileText } from "lucide-react";
 import "../styles/Dashboard.css";
 
 function LabReports() {
@@ -20,6 +21,7 @@ function LabReports() {
   const [results, setResults] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadingReportId, setUploadingReportId] = useState(null);
+  const [viewingLabDoc, setViewingLabDoc] = useState(null);
 
   const currentUser = getUserSession();
   const { addToast } = useToast();
@@ -80,7 +82,9 @@ function LabReports() {
     }
   };
 
-  const filtered = reports.filter(r => {
+  const roleFiltered = filterByRole(reports, currentUser);
+
+  const filtered = roleFiltered.filter(r => {
     const search = searchTerm.toLowerCase().trim();
     if (!search) return true;
 
@@ -161,7 +165,7 @@ function LabReports() {
                         <td>
                           {r.ReportFileURL ? (
                             <a
-                              href={r.ReportFileURL.startsWith("http") ? r.ReportFileURL : `http://localhost:8000${r.ReportFileURL}`}
+                              href={r.ReportFileURL.startsWith("http") ? r.ReportFileURL : `http://127.0.0.1:8000${r.ReportFileURL}`}
                               target="_blank"
                               rel="noreferrer"
                               style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "var(--primary)", fontWeight: "600" }}
@@ -174,29 +178,41 @@ function LabReports() {
                           )}
                         </td>
                         <td>
-                          {uploadingReportId === r.ReportID ? (
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                              <input
-                                type="file"
-                                onChange={(e) => setSelectedFile(e.target.files[0])}
-                                style={{ fontSize: "12px", width: "160px" }}
-                              />
-                              <button onClick={() => handleFileUpload(r.ReportID)} className="btn-primary btn-xs">
-                                Upload
-                              </button>
-                              <button onClick={() => setUploadingReportId(null)} className="btn-ghost btn-xs">
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
+                          <div className="action-btn-group">
                             <button
-                              onClick={() => setUploadingReportId(r.ReportID)}
+                              onClick={() => setViewingLabDoc(r)}
                               className="btn-secondary btn-xs"
+                              style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
                             >
-                              <FileUp size={14} />
-                              Upload File
+                              <FileText size={14} color="var(--primary)" />
+                              <span>View Report File</span>
                             </button>
-                          )}
+                            {(currentUser?.role === "LAB" || currentUser?.role === "ADMIN") && (
+                              uploadingReportId === r.ReportID ? (
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                  <input
+                                    type="file"
+                                    onChange={(e) => setSelectedFile(e.target.files[0])}
+                                    style={{ fontSize: "12px", width: "160px" }}
+                                  />
+                                  <button onClick={() => handleFileUpload(r.ReportID)} className="btn-primary btn-xs">
+                                    Upload
+                                  </button>
+                                  <button onClick={() => setUploadingReportId(null)} className="btn-ghost btn-xs">
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setUploadingReportId(r.ReportID)}
+                                  className="btn-ghost btn-xs"
+                                >
+                                  <FileUp size={14} />
+                                  Upload
+                                </button>
+                              )
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -259,6 +275,60 @@ function LabReports() {
               Submit Lab Report
             </button>
           </form>
+        </Modal>
+
+        {/* Modal for Viewing Lab Report Document */}
+        <Modal
+          isOpen={!!viewingLabDoc}
+          onClose={() => setViewingLabDoc(null)}
+          title={`Diagnostic Lab Report Document #${viewingLabDoc?.ReportID}`}
+        >
+          {viewingLabDoc && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "12px", background: "var(--bg-card)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+              <div style={{ borderBottom: "1px solid var(--border-color)", pb: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h3 style={{ margin: 0, color: "var(--primary)" }}>HEALTHSYNC DIAGNOSTIC LAB REPORT</h3>
+                  <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Official Certified Diagnostic Document • Report #{viewingLabDoc.ReportID} • Test #{viewingLabDoc.TestID}</span>
+                </div>
+                <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>{new Date(viewingLabDoc.ReportDate).toLocaleDateString()}</span>
+              </div>
+
+              <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "12px" }}>
+                <strong style={{ color: "var(--text-muted)", display: "block", fontSize: "11px", marginBottom: "4px" }}>DIAGNOSTIC RESULTS & FINDINGS</strong>
+                <p style={{ margin: 0, fontSize: "14px", lineHeight: "1.6", whiteSpace: "pre-wrap" }}>{viewingLabDoc.Results || "Normal laboratory findings recorded."}</p>
+              </div>
+
+              {viewingLabDoc.ReportFileURL && (
+                <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "12px" }}>
+                  <strong style={{ color: "var(--text-muted)", display: "block", fontSize: "11px", marginBottom: "4px" }}>ATTACHMENT DOCUMENT FILE</strong>
+                  <a
+                    href={viewingLabDoc.ReportFileURL.startsWith("http") ? viewingLabDoc.ReportFileURL : `http://127.0.0.1:8000${viewingLabDoc.ReportFileURL}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--primary)", fontWeight: "600" }}
+                  >
+                    <ExternalLink size={15} />
+                    <span>Download Attached Lab File</span>
+                  </a>
+                </div>
+              )}
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "12px" }}>
+                <button
+                  onClick={() => window.print()}
+                  className="btn-secondary btn-xs"
+                >
+                  Print Lab Document
+                </button>
+                <button
+                  onClick={() => setViewingLabDoc(null)}
+                  className="btn-primary btn-xs"
+                >
+                  Close Document
+                </button>
+              </div>
+            </div>
+          )}
         </Modal>
 
       </div>

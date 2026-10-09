@@ -14,6 +14,7 @@ from app.models.medication_order import MedicationOrder
 from app.models.notification import Notification
 from app.models.ai_interaction import AIInteraction
 from app.models.ai_recommendation import AIRecommendation
+from app.models.patient_doctor_access import PatientDoctorAccess
 from app.schemas.patient import PatientOut, PatientUpdate
 from app.schemas.appointment import AppointmentOut
 from app.schemas.medical_record import MedicalRecordOut
@@ -34,9 +35,28 @@ def get_all_patients(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # Admin or Doctor can list patients
-    if current_user.Role not in ["ADMIN", "DOCTOR", "HOSPITAL"]:
+    if current_user.Role == "DOCTOR" and current_user.doctor_profile:
+        doc_id = current_user.doctor_profile.DoctorID
+        # Doctor can see patients who granted ACTIVE access
+        active_access = db.query(PatientDoctorAccess).filter(
+            PatientDoctorAccess.DoctorID == doc_id,
+            PatientDoctorAccess.Status == "ACTIVE"
+        ).all()
+        allowed_patient_ids = set([a.PatientID for a in active_access])
+
+        # Also patients who have appointments scheduled with this doctor
+        appts = db.query(Appointment).filter(Appointment.DoctorID == doc_id).all()
+        for appt in appts:
+            allowed_patient_ids.add(appt.PatientID)
+
+        if not allowed_patient_ids:
+            return []
+
+        return db.query(Patient).filter(Patient.PatientID.in_(list(allowed_patient_ids))).all()
+
+    elif current_user.Role not in ["ADMIN", "DOCTOR", "HOSPITAL"]:
         raise HTTPException(status_code=403, detail="Access denied")
+
     return db.query(Patient).all()
 
 @router.get("/me", response_model=PatientOut)

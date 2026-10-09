@@ -13,7 +13,6 @@ import {
   FileText, 
   Pill, 
   ShieldAlert, 
-  BrainCircuit, 
   ArrowRight 
 } from "lucide-react";
 import "../styles/Dashboard.css";
@@ -126,22 +125,6 @@ function DoctorDashboard() {
               </div>
               <Link to="/permission-requests" className="metric-link" style={{ color: "#ec4899" }}>
                 <span>Review Requests</span>
-                <ArrowRight size={16} />
-              </Link>
-            </div>
-
-            <div className="metric-card">
-              <div>
-                <div className="metric-card-top">
-                  <span className="metric-title">AI Care Review</span>
-                  <div className="metric-icon-box" style={{ color: "#8b5cf6", background: "rgba(139, 92, 246, 0.1)" }}>
-                    <BrainCircuit size={22} />
-                  </div>
-                </div>
-                <div className="metric-value">{data?.metrics?.aiRecommendationsAwaitingReview || 0}</div>
-              </div>
-              <Link to="/ai-recommendations" className="metric-link" style={{ color: "#8b5cf6" }}>
-                <span>Validate Recommendations</span>
                 <ArrowRight size={16} />
               </Link>
             </div>
