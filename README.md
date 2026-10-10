@@ -1,353 +1,444 @@
 # 🏥 AI Care Coordination Platform
 
-> **An enterprise-grade, HIPAA-aligned healthcare care coordination ecosystem connecting a React 19 SPA frontend, a FastAPI modular backend, and an authoritative SQL Server database with AI-driven clinical draft assistance and granular RBAC.**
+> A full-stack, enterprise-grade healthcare coordination ecosystem featuring role-tailored portals (Patient, Doctor, Hospital Admin, Laboratory, Pharmacy), granular resource-level access control (RLAC), immutable audit logging, and clinician-verified AI assistance.
 
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/React-19-61DAFB.svg?style=for-the-badge&logo=react)](https://react.dev)
-[![SQL Server](https://img.shields.io/badge/SQL_Server-2022-CC292B.svg?style=for-the-badge&logo=microsoftsqlserver)](https://www.microsoft.com/sql-server)
-[![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB.svg?style=for-the-badge&logo=python)](https://python.org)
-[![Vite](https://img.shields.io/badge/Vite-8.3-646CFF.svg?style=for-the-badge&logo=vite)](https://vitejs.dev)
-[![Supabase Auth](https://img.shields.io/badge/Supabase-OAuth_2.0-3ECF8E.svg?style=for-the-badge&logo=supabase)](https://supabase.com)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![Build Status](https://img.shields.io/badge/Tests-5%2F5%20Passed-success.svg?style=for-the-badge)]()
-
----
-
-## 📌 Banner Placeholder
-```
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                                                                                  │
-│                        AI CARE COORDINATION PLATFORM                             │
-│         Production-Style Enterprise Full-Stack Healthcare Management             │
-│                                                                                  │
-└──────────────────────────────────────────────────────────────────────────────────┘
-```
+[![Python](https://img.shields.io/badge/Python-3.12%2B%20%2F%203.14-3776AB.svg?style=flat&logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-19.2-61DAFB.svg?style=flat&logo=react&logoColor=black)](https://react.dev)
+[![Vite](https://img.shields.io/badge/Vite-8.3-646CFF.svg?style=flat&logo=vite&logoColor=white)](https://vitejs.dev)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0%2B-D71F00.svg?style=flat&logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org)
+[![Tests](https://img.shields.io/badge/Tests-5%2F5%20Passed-success.svg?style=flat&logo=pytest&logoColor=white)](backend/tests)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](LICENSE)
 
 ---
 
 ## 📋 Table of Contents
-1. [Project Overview](#-project-overview)
+1. [Overview](#-overview)
 2. [Key Features](#-key-features)
-3. [System Architecture & Data Flow](#-system-architecture--data-flow)
-4. [Technology Stack](#-technology-stack)
-5. [Installation & Setup](#-installation--setup)
-6. [Environment Variables](#-environment-variables)
-7. [Usage Guide](#-usage-guide)
-8. [API Documentation](#-api-documentation)
-9. [Project Directory Structure](#-project-directory-structure)
-10. [Technical Highlights & System Design](#-technical-highlights--system-design)
-11. [Performance & Scalability](#-performance--scalability)
-12. [Security Architecture](#-security-architecture)
-13. [Testing Strategy](#-testing-strategy)
-14. [Deployment Guide](#-deployment-guide)
-15. [CI/CD Pipeline](#-cicd-pipeline)
-16. [Screenshots](#-screenshots)
-17. [Future Roadmap](#-future-roadmap)
-18. [Contributing](#-contributing)
-19. [License](#-license)
-20. [Author & Contact](#-author--contact)
-21. [Acknowledgements](#-acknowledgements)
-22. [Support](#-support)
-23. [Missing Information](#-missing-information)
+3. [System Architecture](#-system-architecture)
+4. [Tech Stack](#-tech-stack)
+5. [Project Structure](#-project-structure)
+6. [Prerequisites](#-prerequisites)
+7. [Installation & Setup](#-installation--setup)
+8. [Configuration](#-configuration)
+9. [Usage & Test Accounts](#-usage--test-accounts)
+10. [API Documentation](#-api-documentation)
+11. [Testing](#-testing)
+12. [Deployment](#-deployment)
+13. [Demo & Screenshots](#-demo--screenshots)
+14. [Roadmap](#-roadmap)
+15. [Contributing](#-contributing)
+16. [License](#-license)
+17. [Author & Contact](#-author--contact)
 
 ---
 
-## 🎯 Project Overview
+## 🎯 Overview
 
-### Problem Statement
-Healthcare ecosystems suffer from fragmented patient records, non-standardized permission models between patients and visiting clinicians, unmonitored data access, and siloed diagnostic workflows. Traditional systems either expose patient data unconditionally or rely on rigid monolithic architectures that hinder care coordination across multiple facilities.
+Healthcare data is often fragmented across disparate clinical silos, visiting doctors, commercial laboratories, and pharmacies. This lack of centralized coordination risks medical errors, delays treatment, and compromises patient privacy.
 
-### Solution & Mission
-The **AI Care Coordination Platform** is a full-stack solution built with **FastAPI**, **React 19**, **SQL Server**, and **Supabase OAuth**. It establishes an authoritative 20-table SQL schema with strict Resource-Level Access Control (RLAC), immutable audit logging, automated event notifications, and clinician-reviewed AI care coordination drafts.
+The **AI Care Coordination Platform** solves these challenges by providing an end-to-end, privacy-preserving healthcare operations hub:
 
-> [!IMPORTANT]
-> **AI Safety Guarantee**: AI recommendations in this platform are strictly generated as `PENDING` drafts and saved separately from authoritative clinical records. Doctor verification (`REVIEWED` or `REJECTED`) is mandatory before any clinical decision is rendered.
-
-### Real-World Use Cases
-- **Patient Data Sovereignty**: Patients retain full control to approve, reject, or revoke doctor access to their `MEDICAL_RECORD`, `LAB_REPORT`, `PRESCRIPTION`, `APPOINTMENT`, and `DIAGNOSIS`.
-- **Multi-Facility Care**: Doctors, Laboratories, and Pharmacies operate in role-tailored dashboards synchronized in real-time.
-- **HIPAA-Compliant Auditing**: Every sensitive read/write operation triggers an immutable `AccessAuditLog` entry.
+- **Patient Sovereignty**: Patients possess full ownership of their medical history and grant explicit, time-limited access permissions to clinicians per resource type.
+- **Five Dedicated Role Portals**: Tailored interfaces for **Patients**, **Doctors**, **Hospital Administrators**, **Laboratory Technicians**, and **Pharmacists**.
+- **Clinician-in-the-Loop AI**: Care coordination recommendations (powered by Google Gemini or OpenAI) are generated as `PENDING` drafts and require doctor review and sign-off before entering authoritative clinical workflows.
+- **HIPAA-Aligned Access Auditing**: Every sensitive query, record view, and report download is recorded in an immutable `AccessAuditLog`.
+- **Hybrid Database Architecture**: Runs zero-config on SQLite for local development and unit tests, with native support for Microsoft SQL Server (via `pyodbc`) and PostgreSQL / Supabase for enterprise deployment.
 
 ---
 
 ## ✨ Key Features
 
 ### 👤 Patient Portal
-- 📊 **Comprehensive Dashboard**: Real-time overview of active appointments, clinical history, lab reports, and prescriptions.
-- 🔒 **Privacy Control Center**: Review incoming doctor access requests, approve access links, configure custom expiration dates, or revoke links instantly.
-- 💬 **Interactive AI Assistant**: Q&A healthcare guidance with built-in medical safety disclaimers.
+- **Health Overview Dashboard**: Immediate visibility into upcoming appointments, active prescriptions, recent lab reports, and clinical history.
+- **Privacy & Consent Manager**: Review incoming doctor access requests, configure granular permissions (`CanView`, `CanAdd`, `CanEdit`), define expiration dates, or revoke doctor access with a single click.
+- **Consultation Scheduling**: Book appointments with specialists and track consultation statuses.
+- **AI Health Assistant**: Ask questions and receive instant healthcare guidance with automated clinical disclaimers.
+- **Profile Management**: Maintain personal contact details, emergency contacts, and blood group information.
 
 ### 🩺 Doctor & Clinician Suite
-- 📋 **Assigned Patient Roster**: Filter and view only authorized patients linked via active `PatientDoctorAccess`.
-- 🩺 **Clinical Documentation**: Issue diagnosis codes (ICD-10) and record patient symptoms.
-- 🤖 **Doctor AI Review Queue**: Interface to inspect, validate, or reject AI care draft recommendations before clinical execution.
+- **Authorized Patient Directory**: View and filter only patients who have granted active consent.
+- **Clinical Records & Diagnoses**: Document clinical notes, record symptoms, and assign ICD-10 diagnosis codes.
+- **Prescription Ordering**: Issue multi-item medication orders linked to a standardized drug catalog.
+- **Doctor AI Review Queue**: Inspect and validate or reject AI-generated clinical care coordination recommendations.
 
-### 🔬 Laboratory & Pharmacy Modules
-- 🧪 **Lab Diagnostic Orders**: Track orders (`ORDERED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`) and securely upload PDF/Image lab reports (`POST /api/lab-reports/{id}/file`).
-- 💊 **Prescription & Pharmacy Orders**: Issue multi-item prescriptions and process pharmacy fulfillment orders (`PENDING` ➔ `PROCESSING` ➔ `READY` ➔ `COMPLETED`).
+### 🔬 Laboratory Portal
+- **Diagnostic Test Orders**: Track lab orders across stages (`ORDERED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`).
+- **Secure Report Uploads**: Upload diagnostic attachments (PDF, PNG, JPG) with size limits (10MB) and MIME validation.
 
-### 🛡️ Administration & Security Compliance
-- 🛡️ **Access Audit Log**: Inspection of every data access event including timestamp, action type (`VIEW`, `ADD`, `EDIT`, `DELETE`, `DOWNLOAD`), user ID, and target patient ID.
-- 🔑 **Supabase & JWT Authentication**: Choice of standard JWT credentials or one-click **"Continue with Google"** OAuth 2.0 integration.
+### 💊 Pharmacy Portal
+- **Fulfillment Pipeline**: Process medication orders through a status lifecycle (`PENDING` ➔ `PROCESSING` ➔ `READY` ➔ `COMPLETED`).
+- **Medicine Catalog**: Searchable database of 40+ international medicines with dosage forms, generic names, and therapeutic categories.
+
+### 🛡️ Administration & Compliance
+- **Immutable Access Audit Trail**: Complete record of user actions (`VIEW`, `ADD`, `EDIT`, `DELETE`, `DOWNLOAD`), target patient IDs, and UTC timestamps.
+- **User & Organization Administration**: Register and manage healthcare organizations, clinics, and hospital staff.
 
 ---
 
-## 🏗️ System Architecture & Data Flow
+## 🏗️ System Architecture
 
 ```mermaid
 graph TD
-    Client["React 19 SPA (Vite)"] -->|OAuth 2.0| Supabase["Supabase Auth / Google OAuth"]
-    Client -->|REST API + Bearer JWT| FastAPI["FastAPI Backend Server (Port 8000)"]
+    Client["React 19 SPA (Vite)"] -->|OAuth 2.0 Flow| Supabase["Supabase Auth / Google OAuth"]
+    Client -->|REST API + Bearer JWT| FastAPI["FastAPI Backend (Port 8000)"]
     
-    subgraph Backend Layer
-        FastAPI --> AuthDep["Security & RBAC Middleware"]
-        FastAPI --> PermSvc["Permission Service Enforcer"]
-        FastAPI --> AuditSvc["Access Audit Service"]
-        FastAPI --> AISvc["AI Care Coordination Service (Gemini SDK)"]
+    subgraph FastAPI Backend Core
+        FastAPI --> AuthDep["RBAC & Security Dependencies"]
+        FastAPI --> PermSvc["PermissionService (RLAC Enforcement)"]
+        FastAPI --> AuditSvc["AuditService (Immutable Logging)"]
+        FastAPI --> AISvc["AIService (Gemini / OpenAI / Mock)"]
+        FastAPI --> Uploads["StaticFiles Mount (/uploads)"]
     end
     
-    Backend Layer --> ORM["SQLAlchemy 2.0 ORM"]
-    ORM --> DB[("Microsoft SQL Server / SQLite Fallback")]
+    FastAPI --> ORM["SQLAlchemy 2.0 ORM"]
+    ORM --> DB[("SQLite (Dev) / SQL Server / Supabase (Prod)")]
 ```
 
-### Data Flow Scenario: Doctor Accessing Medical Record
-1. Doctor requests access ➔ Insert `PermissionRequest` (`Status=PENDING`).
-2. Patient approves ➔ Update `PermissionRequest` (`Status=APPROVED`), create `PatientDoctorAccess` (`Status=ACTIVE`), and set `PatientAccessPermissions` (`CanView=True`).
-3. Doctor requests `GET /api/medical-records/{id}`:
-   - `auth_deps` validates Doctor JWT.
-   - `permission_service` verifies `Status=ACTIVE`, checks `ExpiresAt > now()`, and confirms `CanView=True`.
-   - `audit_service` writes entry to `AccessAuditLog`.
-   - Record returned to Doctor frontend.
+### Data Access Lifecycle
+1. **Request**: Doctor requests access to a patient record (`POST /api/access-requests`).
+2. **Consent**: Patient approves the request (`PATCH /api/access-requests/{id}/approve`), establishing an active `PatientDoctorAccess` record with configured permissions.
+3. **Enforcement**: When doctor accesses patient records (`GET /api/medical-records`), `PermissionService` verifies the active link and expiration date (`ExpiresAt > now()`).
+4. **Audit**: `AuditService` logs the access event into `AccessAuditLogs`.
 
 ---
 
-## 🧪 Technology Stack
+## 🧪 Tech Stack
 
-| Domain | Technology | Description |
-|---|---|---|
-| **Frontend Core** | React 19, JavaScript (ESNext) | Single Page Application framework |
-| **Build & Styling** | Vite 8.3, Vanilla CSS | Rapid HMR bundler and curated dark/glassmorphic CSS system |
-| **Routing** | React Router v7 | Client-side declarative route management |
-| **Backend Core** | Python 3.12+, FastAPI 0.110+ | Asynchronous RESTful API service |
-| **Server Engine** | Uvicorn (ASGI) | Lightning-fast production ASGI server |
-| **Database ORM** | SQLAlchemy 2.0+ | Object-Relational Mapping with connection pooling |
-| **Database Engine** | SQL Server (pyodbc) / SQLite | Authoritative 20-table SQL schema with local zero-config fallback |
-| **Auth & Security** | JWT (PyJWT), Passlib, Bcrypt | Role-based authorization & password hashing |
-| **OAuth 2.0** | Supabase JS Client | One-click Google SSO integration |
-| **AI Integration** | `google-genai` / `google-generativeai` | Native Google Gemini SDK integration with clinical safety fallback |
-| **Testing** | pytest, httpx, StaticPool | In-memory isolated integration testing suite |
+| Domain | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Frontend Framework** | [React 19](https://react.dev/) | Component-based SPA architecture |
+| **Frontend Build Tool** | [Vite 8.3](https://vitejs.dev/) | Lightning-fast HMR and production bundling |
+| **Routing** | [React Router v7](https://reactrouter.com/) | Client-side routing and layout management |
+| **Icons & UI** | [Lucide React](https://lucide.dev/) | Healthcare UI iconography |
+| **Styling** | Vanilla CSS | Custom design system with glassmorphism, responsive themes, and micro-animations |
+| **Backend Framework** | [FastAPI 0.110+](https://fastapi.tiangolo.com/) | High-performance asynchronous REST API |
+| **ASGI Server** | [Uvicorn](https://www.uvicorn.org/) | Production-grade ASGI server |
+| **ORM & Database** | [SQLAlchemy 2.0](https://www.sqlalchemy.org/) | Schema mapping, relational joins, and connection pooling |
+| **Database Engines** | SQLite (dev) / SQL Server / Postgres | Local zero-config SQLite fallback, enterprise SQL Server via `pyodbc` |
+| **Authentication** | [PyJWT](https://pyjwt.readthedocs.io/) & [Passlib](https://passlib.readthedocs.io/) | Stateless JWT tokens and secure password hashing (PBKDF2/Bcrypt) |
+| **OAuth 2.0** | [@supabase/supabase-js](https://supabase.com/) | Google SSO and federated authentication |
+| **AI Integration** | [google-generativeai](https://pypi.org/project/google-generativeai/) / [openai](https://pypi.org/project/openai/) | Clinical draft assistance with offline fallback |
+| **Testing** | [pytest 8+](https://docs.pytest.org/) & [httpx](https://www.python-httpx.org/) | Automated integration tests with in-memory SQLite isolation |
+
+---
+
+## 📂 Project Structure
+
+```
+Health-Coordination-System/
+├── backend/
+│   ├── app/
+│   │   ├── dependencies/       # Authentication & role-based access dependencies (auth_deps.py)
+│   │   ├── models/             # 20 SQLAlchemy database models (User, Patient, Doctor, etc.)
+│   │   ├── routers/            # 16 FastAPI router modules (auth, patients, doctors, etc.)
+│   │   ├── schemas/            # Pydantic schemas for request validation & serialization
+│   │   ├── security/           # Password hashing (passwords.py) & JWT creation (jwt.py)
+│   │   ├── services/           # Business logic: AI service, audit logger, permission enforcer
+│   │   ├── utils/              # File storage handler with extension whitelist
+│   │   ├── config.py           # Environment settings via Pydantic BaseSettings
+│   │   ├── database.py         # SQLAlchemy engine, SessionLocal, and DB dependency
+│   │   └── main.py             # FastAPI entry point, CORS middleware, router registration
+│   ├── tests/
+│   │   └── test_backend.py     # Automated pytest suite covering auth, appointments, and permissions
+│   ├── uploads/                # Directory for uploaded lab report documents (retained via .gitkeep)
+│   ├── .env.example            # Backend environment template
+│   ├── pytest.ini              # Pytest configuration (scopes test discovery to tests/)
+│   ├── requirements.txt        # Python backend dependencies
+│   ├── seed.py                 # Seeds initial fictional database records across all roles
+│   ├── supabase_schema.sql     # PostgreSQL/Supabase production schema definition
+│   └── update_seed_medicines.py# Seeds 40+ international medicines into catalog
+│
+├── frontend/
+│   ├── public/                 # Static assets (favicon.svg, icons.svg)
+│   ├── src/
+│   │   ├── assets/             # Branding assets
+│   │   ├── components/         # Reusable UI components (Navbar, Footer, Badge, Modal, etc.)
+│   │   ├── context/            # React Context providers (ThemeContext, ToastContext)
+│   │   ├── data/               # World medicine catalog dataset (worldMedicines.js)
+│   │   ├── pages/              # 30 page views covering all role portals and dashboards
+│   │   ├── services/           # Centralized API client (api.js) and Supabase client (supabase.js)
+│   │   ├── styles/             # Modular CSS stylesheets (Auth.css, Dashboard.css, Navbar.css)
+│   │   ├── utils/              # Role-filtering helper (roleFilter.js)
+│   │   ├── App.jsx             # Main routing component
+│   │   ├── index.css           # Global CSS variables and design tokens
+│   │   └── main.jsx            # React root mount point
+│   ├── .env.example            # Frontend environment template
+│   ├── package.json            # Node dependencies and scripts
+│   └── vite.config.js          # Vite build configuration
+│
+├── .gitignore                  # Git ignore rules for node_modules, caches, and upload files
+├── README.md                   # Project documentation
+└── start_app.bat               # Windows launcher script starting backend and frontend concurrently
+```
+
+---
+
+## ⚙️ Prerequisites
+
+- **Python**: Version `3.12` or higher (tested on Python `3.14`)
+- **Node.js**: Version `18.0.0` or higher
+- **npm**: Version `9.0.0` or higher
+- **Git**: Installed and configured
+- *(Optional)* **Microsoft SQL Server**: Required only if connecting to SQL Server instead of the built-in SQLite database
 
 ---
 
 ## 🚀 Installation & Setup
 
-### Prerequisites
-- Python 3.12+ installed
-- Node.js 18+ and npm installed
-- Microsoft SQL Server (Optional, local SQLite fallback active by default)
+### 1. Clone the Repository
 
-### 1. Clone Repository
 ```bash
-git clone https://github.com/your-username/healthcare-frontend.git
-cd healthcare-frontend
+git clone https://github.com/saiashish13/Health-Coordination-System.git
+cd Health-Coordination-System
 ```
 
 ### 2. Backend Setup
+
 ```bash
+# Navigate to backend directory
 cd backend
+
+# Create a virtual environment
 python -m venv venv
-# On Windows:
+
+# Activate the virtual environment
+# On Windows (PowerShell / Command Prompt):
 venv\Scripts\activate
-# On Linux/macOS:
+# On macOS / Linux:
 source venv/bin/activate
 
+# Install dependencies
 pip install -r requirements.txt
+
+# Create environment configuration
+cp .env.example .env
 ```
 
-### 3. Seed Database & Run Backend
+### 3. Seed Database
+
+Initialize database tables and populate fictional test accounts:
+
 ```bash
-# Seed initial fictional development accounts and records
+# Seed initial users, appointments, medical records, and permission links
 python seed.py
 
-# Run FastAPI backend server
-python -m uvicorn app.main:app --reload --port 8000
+# (Optional) Seed the global medicine catalog
+python update_seed_medicines.py
 ```
-- Interactive Swagger API Documentation: `http://localhost:8000/docs`
 
 ### 4. Frontend Setup
-Open a new terminal window:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-- Web Application UI: `http://localhost:5173`
 
-### ⚡ One-Click Concurrent Execution (Windows)
-Double-click `./start_app.bat` at the repository root to launch both backend and frontend servers in separate dedicated command windows automatically!
+Open a separate terminal window:
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install Node dependencies
+npm install
+
+# Create environment configuration
+cp .env.example .env
+```
 
 ---
 
-## 🔑 Environment Variables
+## 🔧 Configuration
 
 ### Backend Environment Variables (`backend/.env`)
 
-| Variable Name | Required | Description | Example / Default |
-|---|---|---|---|
-| `DB_SERVER` | No | SQL Server Hostname / IP (Leave blank for SQLite mode) | `localhost` or `localhost\SQLEXPRESS` |
-| `DB_PORT` | No | SQL Server TCP Port | `1433` |
-| `DB_NAME` | No | Database Name | `HealthcareDB` |
-| `DB_USER` | No | SQL Server Login User | `sa` |
-| `DB_PASSWORD` | No | SQL Server Password | `YourPassword123!` |
-| `DB_DRIVER` | No | Installed ODBC Driver | `ODBC Driver 18 for SQL Server` |
-| `JWT_SECRET` | Yes | Secret key for JWT signing | `eU2BrPeWkSsbr-a6seYzQuMh8ofuKZTsMna_QnJTQAA` |
-| `JWT_ALGORITHM` | Yes | Token hashing algorithm | `HS256` |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Yes | JWT token expiration time | `120` |
-| `FRONTEND_URL` | Yes | Allowed CORS Origin | `http://localhost:5173` |
-| `AI_PROVIDER` | No | AI Model Provider | `google` or `mock` |
-| `AI_API_KEY` | No | Google Gemini API Key | `your-gemini-api-key` |
-| `SUPABASE_URL` | No | Supabase Project URL | `https://zbotbgwdrxqlbfurfwml.supabase.co` |
-| `SUPABASE_ANON_KEY` | No | Supabase Public Anon Key | `sb_publishable_M5hq...` |
+| Variable | Required | Default / Example | Purpose |
+| :--- | :---: | :--- | :--- |
+| `PROJECT_NAME` | No | `AI Care Coordination Platform Backend` | Display title for API documentation |
+| `VERSION` | No | `1.0.0` | API version string |
+| `DATABASE_URL` | No | `sqlite:///./healthcare.db` | Overrides database connection string (SQLite, PostgreSQL, or SQL Server) |
+| `DB_SERVER` | No | `""` | SQL Server host (leave blank to use SQLite) |
+| `DB_PORT` | No | `1433` | SQL Server port |
+| `DB_NAME` | No | `HealthcareDB` | SQL Server database name |
+| `DB_USER` | No | `sa` | SQL Server username |
+| `DB_PASSWORD` | No | `""` | SQL Server password |
+| `DB_DRIVER` | No | `ODBC Driver 18 for SQL Server` | Installed ODBC driver name |
+| `JWT_SECRET` | **Yes** | `super-secret-key-change-in-production-ai-care-platform-2026` | Secret key for signing access tokens |
+| `JWT_ALGORITHM` | **Yes** | `HS256` | JWT signature algorithm |
+| `ACCESS_TOKEN_EXPIRE_MINUTES`| **Yes** | `120` | Session token lifetime in minutes |
+| `FRONTEND_URL` | No | `http://localhost:5173` | Allowed origin for CORS headers |
+| `AI_PROVIDER` | No | `mock` | AI engine (`mock`, `google`, or `openai`) |
+| `AI_API_KEY` | No | `""` | API key for Google Gemini or OpenAI |
+| `SUPABASE_URL` | No | `https://your-project.supabase.co` | Supabase project endpoint |
+| `SUPABASE_PUBLISHABLE_KEY` | No | `sb_publishable_...` | Supabase publishable/anon key |
 
 ### Frontend Environment Variables (`frontend/.env`)
 
-| Variable Name | Required | Description | Example / Default |
-|---|---|---|---|
-| `VITE_API_URL` | Yes | FastAPI Backend API Base URL | `http://localhost:8000/api` |
-| `VITE_SUPABASE_URL` | Yes | Supabase Project Client URL | `https://zbotbgwdrxqlbfurfwml.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | Yes | Supabase Publishable Key | `sb_publishable_M5hq...` |
+| Variable | Required | Default / Example | Purpose |
+| :--- | :---: | :--- | :--- |
+| `VITE_API_URL` | **Yes** | `http://localhost:8000/api` | Base URL of the running FastAPI backend |
+| `VITE_SUPABASE_URL` | No | `https://your-project.supabase.co` | Supabase endpoint for Google OAuth |
+| `VITE_SUPABASE_ANON_KEY` | No | `your_supabase_anon_key_here` | Supabase anonymous public key |
 
 ---
 
-## 📖 Usage Guide & Default Credentials
+## 💻 Usage & Test Accounts
 
-The system comes pre-configured with fictional test accounts across all 5 healthcare roles:
+### Starting the Application
 
-| Role | Email | Password | Primary Feature Capabilities |
-|---|---|---|---|
-| **PATIENT** | `patient@healthcare.com` | `password123` | Personal records, appointments, permission approvals, AI assistant |
-| **DOCTOR** | `doctor@healthcare.com` | `password123` | Patient list, clinical notes, diagnosis, AI recommendation review |
-| **ADMIN** | `admin@healthcare.com` | `password123` | System stats, user management, immutable access audit logs |
-| **LAB** | `lab@healthcare.com` | `password123` | Lab test orders, uploading result PDF/Image attachments |
-| **PHARMACY** | `pharmacy@healthcare.com` | `password123` | Medication orders, processing prescription fulfillment |
+#### Option A: One-Click Concurrent Execution (Windows)
+Double-click `start_app.bat` in the repository root, or run:
+
+```cmd
+.\start_app.bat
+```
+This automatically frees port `8000` and `5173`, launches the FastAPI backend, and starts the Vite development server in dedicated terminal windows.
+
+#### Option B: Manual Execution
+
+**Terminal 1 — Backend:**
+```bash
+cd backend
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+- API Root: `http://localhost:8000`
+- Interactive Swagger Docs: `http://localhost:8000/docs`
+- ReDoc Docs: `http://localhost:8000/redoc`
+
+**Terminal 2 — Frontend:**
+```bash
+cd frontend
+npm run dev
+```
+- Web Application: `http://localhost:5173`
 
 ---
 
-## 📑 API Documentation & Response Standards
+### Pre-Configured Test Accounts
 
-### Standard JSON Response Format
+The seeder (`seed.py`) provisions pre-configured test accounts for each role:
+
+| Role | Email | Password | Primary Capabilities |
+| :--- | :--- | :--- | :--- |
+| **PATIENT** | `patient@healthcare.com` | `password123` | Personal health records, appointment bookings, consent manager, AI assistant |
+| **DOCTOR** | `doctor@healthcare.com` | `password123` | Patient list, clinical notes, diagnosis creation, AI draft review queue |
+| **ADMIN** | `admin@healthcare.com` | `password123` | System metrics, user administration, immutable access audit log |
+| **LAB** | `lab@healthcare.com` | `password123` | Diagnostic lab orders, PDF/Image result attachment upload |
+| **PHARMACY** | `pharmacy@healthcare.com` | `password123` | Prescription fulfillment pipeline, medication dispensing |
+
+---
+
+## 📖 API Documentation
+
+FastAPI auto-generates interactive OpenAPI documentation available at `http://localhost:8000/docs`.
+
+### Standard Response Structure
+
 ```json
 {
   "success": true,
-  "data": {},
-  "message": "Request successful"
+  "message": "Request successful",
+  "data": {}
 }
 ```
 
-### Key API Endpoints
+### Core API Endpoints
 
-```
-POST   /api/auth/login                         # User Login & JWT Generation
-POST   /api/auth/register                      # User Registration
-POST   /api/auth/google                        # Supabase Google OAuth Sync
-GET    /api/patients/me                        # Patient Profile Lookup
-GET    /api/doctors/me                         # Doctor Profile Lookup
-POST   /api/appointments                       # Schedule Appointment
-PATCH  /api/appointments/{id}/status           # Update Appointment Status
-POST   /api/medical-records                    # Add Medical Record (Generates AI Draft)
-POST   /api/access-requests                    # Doctor Access Request
-PATCH  /api/access-requests/{id}/approve       # Patient Grants Access
-POST   /api/lab-reports/{id}/file              # Upload Lab Report Attachment
-PATCH  /api/ai/recommendations/{id}/review     # Doctor Validates AI Draft
-GET    /api/admin/audit-logs                   # Security Audit Trail
-```
-
----
-
-## 📂 Project Directory Structure
-
-```
-healthcare-frontend/
-├── backend/
-│   ├── app/
-│   │   ├── main.py                     # FastAPI Entry point, CORS, Router Mounting
-│   │   ├── config.py                   # Pydantic BaseSettings & Connection String Builder
-│   │   ├── database.py                 # Engine Creation & SessionLocal Generator
-│   │   ├── models/                     # 20 SQLAlchemy Database Models
-│   │   ├── schemas/                    # Pydantic Validation Schemas
-│   │   ├── security/                   # Passlib Hashing & PyJWT Utilities
-│   │   ├── dependencies/               # RBAC & Authentication Dependencies
-│   │   ├── services/                   # Business Logic (Audit, Notifications, Permissions, AI)
-│   │   ├── utils/                      # File Storage & Upload Handlers
-│   │   └── routers/                    # 16 API Router Modules
-│   ├── tests/                          # Automated Pytest Suite
-│   ├── seed.py                         # Fictional Data Generator
-│   ├── requirements.txt                # Python Dependencies
-│   └── README.md                       # Backend Guide
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/                 # Navbar & Global Components
-│   │   ├── pages/                      # 28 Interactive React Screen Views
-│   │   ├── services/                   # Central Fetch API Client & Supabase Helper
-│   │   └── styles/                     # Curated Glassmorphic CSS Files
-│   ├── package.json                    # Frontend NPM Dependencies
-│   └── vite.config.js                  # Vite Config
-│
-└── start_app.bat                       # One-Click Concurrent App Launcher
-```
+| Category | Method | Endpoint | Description |
+| :--- | :--- | :--- | :--- |
+| **Authentication** | `POST` | `/api/auth/register` | Register new user account |
+| | `POST` | `/api/auth/login` | Authenticate with credentials and receive JWT |
+| | `POST` | `/api/auth/google` | Synchronize Supabase Google OAuth account |
+| | `GET` | `/api/auth/me` | Fetch authenticated user profile |
+| **Patients** | `GET` | `/api/patients` | List patients (filtered by doctor access) |
+| | `GET` | `/api/patients/{id}/medical-history` | Fetch complete medical history (requires consent) |
+| | `PUT` | `/api/patients/{id}` | Update patient profile |
+| **Doctors** | `GET` | `/api/doctors` | List registered physicians and specialties |
+| | `PUT` | `/api/doctors/me` | Update doctor profile details |
+| **Appointments** | `GET` | `/api/appointments` | List appointments for user |
+| | `POST` | `/api/appointments` | Book consultation appointment |
+| | `PATCH`| `/api/appointments/{id}/status` | Update status (`CONFIRMED`, `CANCELLED`, `COMPLETED`) |
+| **Medical Records** | `GET` | `/api/medical-records` | Fetch clinical records |
+| | `POST` | `/api/medical-records` | Create clinical record (generates AI draft) |
+| **Diagnoses** | `GET` | `/api/diagnoses` | List patient diagnoses |
+| | `POST` | `/api/diagnoses` | Record diagnosis with ICD-10 code |
+| **Laboratory** | `GET` | `/api/lab-tests` | Retrieve diagnostic lab tests |
+| | `POST` | `/api/lab-tests` | Order lab test |
+| | `POST` | `/api/lab-reports` | Submit lab report |
+| | `POST` | `/api/lab-reports/{id}/file` | Upload lab report attachment |
+| **Pharmacy** | `GET` | `/api/medicines` | Query medicine catalog |
+| | `POST` | `/api/prescriptions` | Create doctor prescription |
+| | `GET` | `/api/medication-orders` | Fetch medication orders |
+| | `PATCH`| `/api/medication-orders/{id}/status` | Update fulfillment status |
+| **Access Control** | `POST` | `/api/access-requests` | Doctor requests access to patient records |
+| | `PATCH`| `/api/access-requests/{id}/approve` | Patient approves access and sets permissions |
+| | `PATCH`| `/api/access-requests/{id}/revoke` | Patient revokes doctor access |
+| **AI Coordination** | `POST` | `/api/ai/interactions` | Submit prompt to AI Assistant |
+| | `PATCH`| `/api/ai/recommendations/{id}/review` | Doctor reviews and approves/rejects AI draft |
+| **Admin & Audit** | `GET` | `/api/admin/audit-logs` | Retrieve immutable access audit logs |
+| | `GET` | `/api/admin/stats` | System-wide statistics and metrics |
 
 ---
 
-## 🛡️ Technical Highlights & System Design
+## 🧪 Testing
 
-- **Separation of Concerns**: Strict boundary enforced: `Router ➔ Service Layer ➔ SQLAlchemy ORM ➔ Database`.
-- **Resource-Level Access Control (RLAC)**: Reusable `PermissionService` checks active links, validates timestamps against `ExpiresAt`, and enforces granular `CanView`, `CanAdd`, and `CanEdit` flags per resource.
-- **Audit Traceability**: Immutable event logger writing directly to `AccessAuditLog` whenever sensitive patient data is accessed.
-- **Fail-Safe AI Isolation**: AI outputs are stored in `AIRecommendations` with status `PENDING`. They are never auto-committed to authoritative clinical records.
+### Backend Unit & Integration Tests
 
----
-
-## ⚡ Performance & Scalability
-
-- **Async & Non-Blocking Execution**: Built on FastAPI and Uvicorn for asynchronous request handling.
-- **Database Connection Pooling**: SQLAlchemy pre-ping pooling ensures fast connection reuse and automatic recovery.
-- **Indexed Schemas**: Key fields (`Email`, `UserID`, `PatientID`, `DoctorID`, `Status`) are indexed for fast lookup queries.
-
----
-
-## 🔒 Security Architecture
-
-> [!CAUTION]
-> Plaintext passwords and hardcoded database credentials are strictly prohibited. Passwords are encrypted using `passlib` with pre-hashed PBKDF2/Bcrypt.
-
-- **Authentication**: JWT Tokens signed with `HS256` algorithm.
-- **Authorization**: Mandatory backend-enforced dependency checks (`require_role`, `require_patient`, `require_doctor`).
-- **File Upload Security**: File extension whitelist (`.pdf`, `.png`, `.jpg`, `.txt`, `.docx`) and 10MB file size limit enforced by [`app/utils/storage.py`](file:///c:/Users/n.saiashish/OneDrive/Desktop/healthcare-frontend/backend/app/utils/storage.py).
-
----
-
-## 🧪 Testing Strategy
-
-Run the automated backend test suite using `pytest`:
+The test suite validates authentication, user registration, appointments, patient updates, and permission access workflows using an isolated in-memory SQLite database:
 
 ```bash
 cd backend
-python -m pytest tests/
+python -m pytest
 ```
 
-- **Test Suite**: Includes tests for Authentication, Patient Updates, Appointment Status Flows, Access Request Approval Workflows, and Doctor AI Review.
-- **Test Isolation**: Tests run against a shared in-memory SQLite database using `StaticPool`.
+Configuration is defined in [backend/pytest.ini](file:///c:/Users/n.saiashish/OneDrive/Desktop/healthcare/Health-Coordination-System/backend/pytest.ini), scoping discovery to `tests/test_*.py`.
+
+### Frontend Build & Linting
+
+```bash
+cd frontend
+
+# Verify production build compilation
+npm run build
+
+# Run code style analysis
+npm run lint
+```
 
 ---
 
-## 🐳 Deployment Guide
+## 🐳 Deployment
 
-### Docker & Docker Compose
-Create a `docker-compose.yml` in the root directory:
+### Containerization (Docker)
 
+To deploy both frontend and backend using Docker:
+
+#### Backend Dockerfile (`backend/Dockerfile`)
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+#### Frontend Dockerfile (`frontend/Dockerfile`)
+```dockerfile
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+#### Docker Compose (`docker-compose.yml`)
 ```yaml
 version: '3.8'
+
 services:
   backend:
     build: ./backend
@@ -355,75 +446,104 @@ services:
       - "8000:8000"
     environment:
       - FRONTEND_URL=http://localhost:5173
+      - JWT_SECRET=change-this-in-production-secure-random-key
+    volumes:
+      - backend-uploads:/app/uploads
+
   frontend:
     build: ./frontend
     ports:
-      - "5173:5173"
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
+    depends_on:
+      - backend
+
+volumes:
+  backend-uploads:
 ```
 
 ---
 
-## 🖼️ Screenshots
+## 🖼️ Demo & Screenshots
 
-### Patient & Doctor Dashboards
-*(Add Dashboard Screenshots Here)*
+<!-- TODO: Add live deployment URL when available -->
+<!-- Live Demo: https://your-demo-url.com -->
 
-### Access Permission Request Workflow
-*(Add Permission Request Screenshots Here)*
+| Patient Dashboard | Doctor Review Queue |
+| :---: | :---: |
+| <!-- TODO: Add screenshot of Patient Dashboard --> ![Patient Dashboard](frontend/src/assets/hero.png) | <!-- TODO: Add screenshot of Doctor AI Review Queue --> *Doctor Review Queue* |
 
-### AI Care Assistant & Doctor Review Queue
-*(Add AI Interaction & Review Screenshots Here)*
+| Consent Management | Lab Reports & Document Viewer |
+| :---: | :---: |
+| <!-- TODO: Add screenshot of Consent Manager --> *Granular Permission Control* | <!-- TODO: Add screenshot of Lab Reports Viewer --> *Diagnostic Reports & Files* |
 
 ---
 
-## 🗺️ Future Roadmap
+## 🗺️ Roadmap
 
-- [x] Full 20-Table SQL Server Database Schema Integration
-- [x] FastAPI Backend with JWT & RBAC
-- [x] React 19 Frontend with 28 Interactive Screens
-- [x] Supabase Google OAuth Integration
-- [x] Doctor AI Recommendation Review Queue
-- [ ] Real-time WebSocket Notifications
-- [ ] Twilio SMS Appointment Reminders
-- [ ] DICOM Medical Imaging Viewer Integration
+- [x] 20-table relational schema with SQLAlchemy ORM
+- [x] Role-Based Access Control (RBAC) with 5 user roles
+- [x] Granular Resource-Level Access Control (RLAC) with expiration dates
+- [x] HIPAA-aligned immutable Access Audit Log
+- [x] Clinician-verified AI care coordination draft review queue
+- [x] Supabase Google OAuth 2.0 integration
+- [x] Searchable global medicine catalog
+- [ ] Real-time WebSocket notifications for doctor access requests
+- [ ] Automated SMS appointment reminders (Twilio integration)
+- [ ] FHIR (Fast Healthcare Interoperability Resources) data export
+- [ ] DICOM medical imaging viewer integration
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these steps:
-1. Fork the Repository.
-2. Create a Feature Branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your Changes (`git commit -m 'Add AmazingFeature'`).
-4. Push to the Branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
+Contributions are welcome! Please follow these guidelines:
+
+1. **Fork the Repository** on GitHub.
+2. **Create a Feature Branch**:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. **Commit Your Changes**:
+   ```bash
+   git commit -m "feat: add your feature description"
+   ```
+4. **Run the Test Suite**:
+   ```bash
+   # Ensure all tests pass before submitting
+   cd backend && python -m pytest
+   cd ../frontend && npm run build
+   ```
+5. **Push to Your Branch**:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+6. **Open a Pull Request** describing your changes and rationale.
 
 ---
 
 ## 📜 License
 
-Distributed under the **MIT License**. See `LICENSE` for more details.
+This project is licensed under the **MIT License**.
+
+<!-- TODO: Add a formal LICENSE file in the repository root if releasing publicly -->
 
 ---
 
 ## 👨‍💻 Author & Contact
 
-**N. Sai Ashish**  
-- **GitHub**: [github.com/saiashish13](https://github.com/saiashish13)  
-- **LinkedIn**: [linkedin.com/in/saiashish](https://linkedin.com)  
-- **Project Repository**: [healthcare-frontend](file:///c:/Users/n.saiashish/OneDrive/Desktop/healthcare-frontend)
+**N. Sai Ashish**
+- **GitHub**: [@saiashish13](https://github.com/saiashish13)
+- **LinkedIn**: [N. Sai Ashish](https://www.linkedin.com/in/saiashish)
+- **Repository**: [Health-Coordination-System](https://github.com/saiashish13/Health-Coordination-System)
 
 ---
 
 ## 🙏 Acknowledgements
 
-- **FastAPI Framework** for asynchronous Python API performance.
-- **React 19 & Vite** for rapid frontend development.
-- **Supabase** for OAuth authentication services.
-- **Google Gemini API** for clinical assistance capabilities.
-
----
-
-## ❓ Missing Information
-
-*None. All backend routers, database schemas, frontend integration modules, test accounts, and security workflows have been fully documented based on the exact codebase implementation.*
+- [FastAPI](https://fastapi.tiangolo.com/) for the modern asynchronous Python web framework
+- [React](https://react.dev/) & [Vite](https://vitejs.dev/) for frontend developer experience and build tooling
+- [SQLAlchemy](https://www.sqlalchemy.org/) for Python ORM and database abstraction
+- [Lucide](https://lucide.dev/) for healthcare and UI icons
+- [Supabase](https://supabase.com/) for OAuth authentication services
