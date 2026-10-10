@@ -9,6 +9,7 @@ class Patient(Base):
     UserID = Column(Integer, ForeignKey("Users.UserID"), unique=True, nullable=False)
     DateOfBirth = Column(String(50), nullable=True)
     Gender = Column(String(20), nullable=True)
+    BloodGroup = Column(String(10), nullable=True)
     Address = Column(String(255), nullable=True)
     EmergencyContact = Column(String(100), nullable=True)
 

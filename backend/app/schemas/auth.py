@@ -8,8 +8,13 @@ class RegisterRequest(BaseModel):
     role: str = "PATIENT" # PATIENT, DOCTOR, ADMIN, LAB, PHARMACY
     phone: Optional[str] = None
     organizationId: Optional[int] = None
+    hospitalName: Optional[str] = None
     specialty: Optional[str] = None
     licenseNumber: Optional[str] = None
+    bloodGroup: Optional[str] = None
+    dateOfBirth: Optional[str] = None
+    gender: Optional[str] = None
+    emergencyContact: Optional[str] = None
 
 class LoginRequest(BaseModel):
     email: str
@@ -29,6 +34,8 @@ class TokenResponse(BaseModel):
     profile_id: Optional[int] = None
     full_name: str
     email: str
+    hospital_name: Optional[str] = None
+    blood_group: Optional[str] = None
 
 class UserProfileResponse(BaseModel):
     UserID: int
@@ -39,3 +46,7 @@ class UserProfileResponse(BaseModel):
     PatientID: Optional[int] = None
     DoctorID: Optional[int] = None
     OrganizationID: Optional[int] = None
+    HospitalName: Optional[str] = None
+    BloodGroup: Optional[str] = None
+    Specialty: Optional[str] = None
+    LicenseNumber: Optional[str] = None

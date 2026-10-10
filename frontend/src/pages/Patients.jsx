@@ -69,17 +69,29 @@ function Patients() {
     loadPatients();
   }, []);
 
+  const [permissionRestricted, setPermissionRestricted] = useState(false);
+
   const handleOpenDetailModal = async (patient) => {
     setSelectedPatient(patient);
     setDetailModalOpen(true);
     setActiveTab("profile");
     setDetailLoading(true);
+    setPermissionRestricted(false);
 
     try {
       const [records, prescs, labs, appts] = await Promise.all([
-        patientApi.getMedicalRecords(patient.PatientID).catch(() => []),
-        patientApi.getPrescriptions(patient.PatientID).catch(() => []),
-        patientApi.getLabReports(patient.PatientID).catch(() => []),
+        patientApi.getMedicalRecords(patient.PatientID).catch(err => {
+          if (err.message && err.message.includes("permission")) setPermissionRestricted(true);
+          return [];
+        }),
+        patientApi.getPrescriptions(patient.PatientID).catch(err => {
+          if (err.message && err.message.includes("permission")) setPermissionRestricted(true);
+          return [];
+        }),
+        patientApi.getLabReports(patient.PatientID).catch(err => {
+          if (err.message && err.message.includes("permission")) setPermissionRestricted(true);
+          return [];
+        }),
         patientApi.getAppointments(patient.PatientID).catch(() => [])
       ]);
 
@@ -89,6 +101,7 @@ function Patients() {
       setPatientAppointments(appts || []);
     } catch (err) {
       console.error("Error loading patient detailed history", err);
+      setPermissionRestricted(true);
       addToast("Permission restricted or error loading medical details", "warning");
     } finally {
       setDetailLoading(false);
@@ -362,13 +375,47 @@ function Patients() {
                 <SkeletonLoader rows={4} />
               ) : (
                 <div>
+                  {permissionRestricted && (
+                    <div style={{
+                      background: "rgba(239, 68, 68, 0.1)",
+                      border: "1px solid var(--error)",
+                      borderRadius: "var(--radius-md)",
+                      padding: "16px",
+                      marginBottom: "16px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px"
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--error)", fontWeight: "700", fontSize: "14px" }}>
+                        <ShieldCheck size={18} />
+                        <span>Patient Access Permission Required</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                        Patient #{selectedPatient.PatientID} ({selectedPatient.user?.FullName || selectedPatient.FullName || "Patient"}) has not granted active permission to view full medical history, lab reports, or prescriptions.
+                      </p>
+                      <button
+                        onClick={() => {
+                          setTargetPatientId(String(selectedPatient.PatientID));
+                          setShowRequestAccessModal(true);
+                        }}
+                        className="btn-primary btn-xs"
+                        style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                      >
+                        <Plus size={14} />
+                        <span>Send Access Permission Request</span>
+                      </button>
+                    </div>
+                  )}
+
                   {activeTab === "profile" && (
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                       <div style={{ background: "var(--bg-card)", padding: "14px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
-                        <h4 style={{ margin: "0 0 10px 0", fontSize: "14px", color: "var(--primary)" }}>Personal Info</h4>
+                        <h4 style={{ margin: "0 0 10px 0", fontSize: "14px", color: "var(--primary)" }}>Personal & Medical Info</h4>
                         <p style={{ margin: "4px 0", fontSize: "13px" }}><strong>Gender:</strong> {selectedPatient.Gender || "Unspecified"}</p>
                         <p style={{ margin: "4px 0", fontSize: "13px" }}><strong>Date of Birth:</strong> {selectedPatient.DateOfBirth || "N/A"}</p>
-                        <p style={{ margin: "4px 0", fontSize: "13px" }}><strong>Blood Type:</strong> {selectedPatient.BloodType || "O+"}</p>
+                        <p style={{ margin: "4px 0", fontSize: "13px", color: "var(--primary)", fontWeight: "700" }}>
+                          <strong>Blood Group:</strong> {selectedPatient.BloodGroup || selectedPatient.BloodType || "O+"}
+                        </p>
                       </div>
                       <div style={{ background: "var(--bg-card)", padding: "14px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
                         <h4 style={{ margin: "0 0 10px 0", fontSize: "14px", color: "var(--primary)" }}>Contact & Address</h4>

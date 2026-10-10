@@ -13,8 +13,14 @@ import {
   LogOut, 
   ChevronDown, 
   Bell,
-  LayoutDashboard
+  LayoutDashboard,
+  User,
+  Building2,
+  HeartPulse,
+  Save
 } from "lucide-react";
+import Modal from "./Modal";
+import { authApi, patientApi, doctorApi, setUserSession } from "../services/api";
 import "../styles/Navbar.css";
 
 export default function Navbar() {
@@ -25,9 +31,92 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // Profile Form States
+  const [profileData, setProfileData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    role: "",
+    hospitalName: "",
+    bloodGroup: "O+",
+    specialty: "",
+    emergencyContact: ""
+  });
+  const [profileSaving, setProfileSaving] = useState(false);
 
   const currentUser = getUserSession();
   const profileRef = useRef(null);
+
+  const handleOpenProfileModal = async () => {
+    setShowProfileModal(true);
+    if (!currentUser) return;
+
+    try {
+      const me = await authApi.getMe();
+      setProfileData({
+        fullName: me.FullName || currentUser.full_name || "",
+        email: me.Email || currentUser.email || "",
+        phone: me.Phone || "",
+        role: (me.Role || currentUser.role || "PATIENT").toUpperCase(),
+        hospitalName: me.HospitalName || currentUser.hospital_name || "Central City Hospital",
+        bloodGroup: me.BloodGroup || currentUser.blood_group || "O+",
+        specialty: me.Specialty || "",
+        emergencyContact: ""
+      });
+    } catch {
+      setProfileData({
+        fullName: currentUser.full_name || "",
+        email: currentUser.email || "",
+        phone: "",
+        role: (currentUser.role || "PATIENT").toUpperCase(),
+        hospitalName: currentUser.hospital_name || "Central City Hospital",
+        bloodGroup: currentUser.blood_group || "O+",
+        specialty: "",
+        emergencyContact: ""
+      });
+    }
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setProfileSaving(true);
+    try {
+      const role = (profileData.role || "").toUpperCase();
+      if (role === "PATIENT" && currentUser?.profile_id) {
+        await patientApi.update(currentUser.profile_id, {
+          FullName: profileData.fullName,
+          Phone: profileData.phone,
+          BloodGroup: profileData.bloodGroup,
+          EmergencyContact: profileData.emergencyContact
+        });
+      } else if (role === "DOCTOR") {
+        await doctorApi.updateMe({
+          FullName: profileData.fullName,
+          HospitalName: profileData.hospitalName,
+          Specialty: profileData.specialty,
+          Phone: profileData.phone
+        });
+      }
+
+      // Update stored session
+      const updatedSession = {
+        ...currentUser,
+        full_name: profileData.fullName,
+        hospital_name: profileData.hospitalName,
+        blood_group: profileData.bloodGroup
+      };
+      setUserSession(updatedSession);
+
+      addToast("Profile details updated successfully!", "success");
+      setShowProfileModal(false);
+    } catch (err) {
+      addToast(err.message || "Failed to save profile details", "error");
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   // Monitor scroll for glass navbar background shift
   useEffect(() => {
@@ -154,6 +243,10 @@ export default function Navbar() {
         <Link to="/notifications" className={`nav-link ${location.pathname === "/notifications" ? "active" : ""}`}>
           Notifications
         </Link>
+
+        <Link to="/profile" className={`nav-link ${location.pathname === "/profile" ? "active" : ""}`}>
+          Profile
+        </Link>
       </>
     );
   };
@@ -229,6 +322,15 @@ export default function Navbar() {
                     <LayoutDashboard size={16} />
                     <span>My Dashboard</span>
                   </Link>
+
+                  <Link
+                    to="/profile"
+                    onClick={() => setProfileOpen(false)}
+                    className="dropdown-item"
+                  >
+                    <User size={16} />
+                    <span>My Profile Details</span>
+                  </Link>
                   
                   <Link to="/notifications" className="dropdown-item">
                     <Bell size={16} />
@@ -297,6 +399,121 @@ export default function Navbar() {
           </div>
         </div>
       )}
+
+      {/* Profile Details & Update Modal */}
+      <Modal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        title="My Profile & Hospital / Medical Details"
+      >
+        <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          
+          <div style={{ background: "var(--bg-card)", padding: "12px 16px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <strong style={{ fontSize: "14px", color: "var(--primary)" }}>{profileData.email}</strong>
+              <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                Role: <strong>{profileData.role}</strong> {currentUser?.profile_id ? `• Profile ID #${currentUser.profile_id}` : ""}
+              </div>
+            </div>
+            <span style={{ fontSize: "11px", background: "var(--primary-light)", color: "var(--primary)", padding: "4px 8px", borderRadius: "12px", fontWeight: "700" }}>
+              ACTIVE SESSION
+            </span>
+          </div>
+
+          <div className="form-group">
+            <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Full Name</label>
+            <input
+              type="text"
+              className="form-input"
+              value={profileData.fullName}
+              onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Phone Number</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="e.g. 555-0199"
+              value={profileData.phone}
+              onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+            />
+          </div>
+
+          {profileData.role === "PATIENT" ? (
+            <>
+              <div className="form-group">
+                <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Blood Group (Patient)</label>
+                <select
+                  className="form-input role-select"
+                  value={profileData.bloodGroup}
+                  onChange={(e) => setProfileData({ ...profileData, bloodGroup: e.target.value })}
+                >
+                  <option value="O+">O Positive (O+)</option>
+                  <option value="O-">O Negative (O-)</option>
+                  <option value="A+">A Positive (A+)</option>
+                  <option value="A-">A Negative (A-)</option>
+                  <option value="B+">B Positive (B+)</option>
+                  <option value="B-">B Negative (B-)</option>
+                  <option value="AB+">AB Positive (AB+)</option>
+                  <option value="AB-">AB Negative (AB-)</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Emergency Contact</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. Jane Doe (555-0198)"
+                  value={profileData.emergencyContact}
+                  onChange={(e) => setProfileData({ ...profileData, emergencyContact: e.target.value })}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="form-group">
+                <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Hospital / Clinic / Organization Name</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. Central City Hospital"
+                  value={profileData.hospitalName}
+                  onChange={(e) => setProfileData({ ...profileData, hospitalName: e.target.value })}
+                  required
+                />
+              </div>
+
+              {profileData.role === "DOCTOR" && (
+                <div className="form-group">
+                  <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Medical Specialty</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. Cardiology, Pediatrics"
+                    value={profileData.specialty}
+                    onChange={(e) => setProfileData({ ...profileData, specialty: e.target.value })}
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          <button
+            type="submit"
+            className="btn-primary w-full"
+            disabled={profileSaving}
+            style={{ marginTop: "8px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+          >
+            <Save size={16} />
+            <span>{profileSaving ? "Saving Profile..." : "Save Profile Details"}</span>
+          </button>
+        </form>
+      </Modal>
+
     </header>
   );
 }

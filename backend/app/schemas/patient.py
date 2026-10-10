@@ -5,6 +5,7 @@ from app.schemas.user import UserOut
 class PatientBase(BaseModel):
     DateOfBirth: Optional[str] = None
     Gender: Optional[str] = None
+    BloodGroup: Optional[str] = None
     Address: Optional[str] = None
     EmergencyContact: Optional[str] = None
 

@@ -16,6 +16,10 @@ function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("Patient");
+  const [bloodGroup, setBloodGroup] = useState("O+");
+  const [hospitalName, setHospitalName] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  const [emergencyContact, setEmergencyContact] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -129,7 +133,11 @@ function Register() {
           fullName,
           email,
           password,
-          role: role.toUpperCase()
+          role: role.toUpperCase(),
+          bloodGroup: role === "Patient" ? bloodGroup : null,
+          hospitalName: role !== "Patient" ? (hospitalName || "Central City Hospital") : null,
+          specialty: role === "Doctor" ? specialty : null,
+          emergencyContact: role === "Patient" ? emergencyContact : null
         });
       } catch (apiErr) {
         if (apiErr.message && apiErr.message.includes("already exists")) {
@@ -394,6 +402,62 @@ function Register() {
                   <option value="Pharmacy">Role: Pharmacy</option>
                 </select>
               </div>
+
+              {/* Conditional Inputs Based on Role */}
+              {role === "Patient" ? (
+                <>
+                  <div className="form-group stagger-item stagger-4">
+                    <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px", display: "block" }}>Blood Group</span>
+                    <select
+                      className="form-input role-select"
+                      value={bloodGroup}
+                      onChange={(e) => setBloodGroup(e.target.value)}
+                    >
+                      <option value="O+">O Positive (O+)</option>
+                      <option value="O-">O Negative (O-)</option>
+                      <option value="A+">A Positive (A+)</option>
+                      <option value="A-">A Negative (A-)</option>
+                      <option value="B+">B Positive (B+)</option>
+                      <option value="B-">B Negative (B-)</option>
+                      <option value="AB+">AB Positive (AB+)</option>
+                      <option value="AB-">AB Negative (AB-)</option>
+                    </select>
+                  </div>
+                  <div className="form-group stagger-item stagger-4">
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Emergency Contact Phone (e.g. 555-0199)"
+                      value={emergencyContact}
+                      onChange={(e) => setEmergencyContact(e.target.value)}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="form-group stagger-item stagger-4">
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder={role === "Doctor" ? "Hospital / Clinic Name (e.g. City General Hospital)" : "Hospital / Organization Name"}
+                      value={hospitalName}
+                      onChange={(e) => setHospitalName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  {role === "Doctor" && (
+                    <div className="form-group stagger-item stagger-4">
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Medical Specialty (e.g. Cardiology, Pediatrics)"
+                        value={specialty}
+                        onChange={(e) => setSpecialty(e.target.value)}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
 
               {/* Password Field */}
               <div className="form-group stagger-item stagger-4" style={{ marginBottom: "12px" }}>

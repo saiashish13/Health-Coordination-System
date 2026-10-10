@@ -31,17 +31,27 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     db.refresh(user)
 
     profile_id = None
+    hosp_name = None
+    blood_grp = None
 
     if role_upper == "PATIENT":
-        patient = Patient(UserID=user.UserID)
+        patient = Patient(
+            UserID=user.UserID,
+            BloodGroup=req.bloodGroup,
+            DateOfBirth=req.dateOfBirth,
+            Gender=req.gender,
+            EmergencyContact=req.emergencyContact
+        )
         db.add(patient)
         db.commit()
         db.refresh(patient)
         profile_id = patient.PatientID
+        blood_grp = patient.BloodGroup
     elif role_upper == "DOCTOR":
         doctor = Doctor(
             UserID=user.UserID,
             OrganizationID=req.organizationId,
+            HospitalName=req.hospitalName or "Central City Hospital",
             Specialty=req.specialty,
             LicenseNumber=req.licenseNumber,
             Phone=req.phone
@@ -50,6 +60,7 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(doctor)
         profile_id = doctor.DoctorID
+        hosp_name = doctor.HospitalName
 
     token = create_access_token({
         "user_id": user.UserID,
@@ -64,7 +75,9 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
         role=user.Role,
         profile_id=profile_id,
         full_name=user.FullName,
-        email=user.Email
+        email=user.Email,
+        hospital_name=hosp_name,
+        blood_group=blood_grp
     )
 
 @router.post("/login", response_model=TokenResponse)
@@ -74,10 +87,15 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
     profile_id = None
+    hosp_name = None
+    blood_grp = None
+
     if user.Role == "PATIENT" and user.patient_profile:
         profile_id = user.patient_profile.PatientID
+        blood_grp = user.patient_profile.BloodGroup
     elif user.Role == "DOCTOR" and user.doctor_profile:
         profile_id = user.doctor_profile.DoctorID
+        hosp_name = user.doctor_profile.HospitalName or (user.doctor_profile.organization.OrganizationName if user.doctor_profile.organization else "Central City Hospital")
 
     token = create_access_token({
         "user_id": user.UserID,
@@ -92,7 +110,9 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
         role=user.Role,
         profile_id=profile_id,
         full_name=user.FullName,
-        email=user.Email
+        email=user.Email,
+        hospital_name=hosp_name,
+        blood_group=blood_grp
     )
 
 @router.post("/google", response_model=TokenResponse)
@@ -120,15 +140,20 @@ def google_auth(req: GoogleAuthRequest, db: Session = Depends(get_db)):
             db.add(patient)
             db.commit()
         elif role_upper == "DOCTOR":
-            doctor = Doctor(UserID=user.UserID)
+            doctor = Doctor(UserID=user.UserID, HospitalName="Central City Hospital")
             db.add(doctor)
             db.commit()
 
     profile_id = None
+    hosp_name = None
+    blood_grp = None
+
     if user.Role == "PATIENT" and user.patient_profile:
         profile_id = user.patient_profile.PatientID
+        blood_grp = user.patient_profile.BloodGroup
     elif user.Role == "DOCTOR" and user.doctor_profile:
         profile_id = user.doctor_profile.DoctorID
+        hosp_name = user.doctor_profile.HospitalName
 
     token = create_access_token({
         "user_id": user.UserID,
@@ -143,16 +168,23 @@ def google_auth(req: GoogleAuthRequest, db: Session = Depends(get_db)):
         role=user.Role,
         profile_id=profile_id,
         full_name=user.FullName,
-        email=user.Email
+        email=user.Email,
+        hospital_name=hosp_name,
+        blood_group=blood_grp
     )
 
 @router.post("/refresh", response_model=TokenResponse)
 def refresh_token(current_user: User = Depends(get_current_user)):
     profile_id = None
+    hosp_name = None
+    blood_grp = None
+
     if current_user.Role == "PATIENT" and current_user.patient_profile:
         profile_id = current_user.patient_profile.PatientID
+        blood_grp = current_user.patient_profile.BloodGroup
     elif current_user.Role == "DOCTOR" and current_user.doctor_profile:
         profile_id = current_user.doctor_profile.DoctorID
+        hosp_name = current_user.doctor_profile.HospitalName
 
     token = create_access_token({
         "user_id": current_user.UserID,
@@ -167,7 +199,9 @@ def refresh_token(current_user: User = Depends(get_current_user)):
         role=current_user.Role,
         profile_id=profile_id,
         full_name=current_user.FullName,
-        email=current_user.Email
+        email=current_user.Email,
+        hospital_name=hosp_name,
+        blood_group=blood_grp
     )
 
 @router.get("/me", response_model=UserProfileResponse)
@@ -175,6 +209,10 @@ def get_me(current_user: User = Depends(get_current_user)):
     patient_id = current_user.patient_profile.PatientID if current_user.patient_profile else None
     doctor_id = current_user.doctor_profile.DoctorID if current_user.doctor_profile else None
     org_id = current_user.doctor_profile.OrganizationID if current_user.doctor_profile else None
+    hosp_name = current_user.doctor_profile.HospitalName if current_user.doctor_profile else None
+    blood_grp = current_user.patient_profile.BloodGroup if current_user.patient_profile else None
+    specialty = current_user.doctor_profile.Specialty if current_user.doctor_profile else None
+    license_num = current_user.doctor_profile.LicenseNumber if current_user.doctor_profile else None
 
     return UserProfileResponse(
         UserID=current_user.UserID,
@@ -184,7 +222,11 @@ def get_me(current_user: User = Depends(get_current_user)):
         Role=current_user.Role,
         PatientID=patient_id,
         DoctorID=doctor_id,
-        OrganizationID=org_id
+        OrganizationID=org_id,
+        HospitalName=hosp_name,
+        BloodGroup=blood_grp,
+        Specialty=specialty,
+        LicenseNumber=license_num
     )
 
 @router.post("/logout")

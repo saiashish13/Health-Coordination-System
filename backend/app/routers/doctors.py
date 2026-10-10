@@ -44,6 +44,8 @@ def update_doctor_me(
 
     if req.Specialty is not None:
         doctor.Specialty = req.Specialty
+    if req.HospitalName is not None:
+        doctor.HospitalName = req.HospitalName
     if req.LicenseNumber is not None:
         doctor.LicenseNumber = req.LicenseNumber
     if req.Phone is not None:

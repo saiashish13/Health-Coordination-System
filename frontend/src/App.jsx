@@ -5,6 +5,7 @@ import ScrollProgress from "./components/ScrollProgress";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Profile from "./pages/Profile";
 
 import Users from "./pages/Users";
 import Patients from "./pages/Patients";
@@ -51,6 +52,7 @@ function App() {
             {/* Login and Registration */}
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/profile" element={<Profile />} />
 
             {/* Users, Patients, Doctors and Organizations */}
             <Route path="/users" element={<Users />} />

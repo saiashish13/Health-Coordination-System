@@ -8,6 +8,7 @@ class Doctor(Base):
     DoctorID = Column(Integer, primary_key=True, index=True, autoincrement=True)
     UserID = Column(Integer, ForeignKey("Users.UserID"), unique=True, nullable=False)
     OrganizationID = Column(Integer, ForeignKey("Organizations.OrganizationID"), nullable=True)
+    HospitalName = Column(String(150), nullable=True)
     Specialty = Column(String(100), nullable=True)
     LicenseNumber = Column(String(100), nullable=True)
     Phone = Column(String(50), nullable=True)

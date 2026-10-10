@@ -114,6 +114,8 @@ def update_patient_profile(
         patient.DateOfBirth = req.DateOfBirth
     if req.Gender is not None:
         patient.Gender = req.Gender
+    if req.BloodGroup is not None:
+        patient.BloodGroup = req.BloodGroup
     if req.Address is not None:
         patient.Address = req.Address
     if req.EmergencyContact is not None:
@@ -145,7 +147,14 @@ def get_patient_medical_records(
 ):
     if current_user.Role == "DOCTOR" and current_user.doctor_profile:
         if not permission_service.verify_doctor_permission(db, patient_id, current_user.doctor_profile.DoctorID, "MEDICAL_RECORD", "VIEW"):
-            raise HTTPException(status_code=403, detail="No active doctor permission for medical records")
+            # Check active access link
+            access = db.query(PatientDoctorAccess).filter(
+                PatientDoctorAccess.PatientID == patient_id,
+                PatientDoctorAccess.DoctorID == current_user.doctor_profile.DoctorID,
+                PatientDoctorAccess.Status == "ACTIVE"
+            ).first()
+            if not access:
+                raise HTTPException(status_code=403, detail="No active doctor permission for patient medical records")
 
     audit_service.log_access(db, current_user.UserID, "MedicalRecord", patient_id, action="VIEW")
     return db.query(MedicalRecord).filter(MedicalRecord.PatientID == patient_id).all()
@@ -156,6 +165,15 @@ def get_patient_diagnoses(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if current_user.Role == "DOCTOR" and current_user.doctor_profile:
+        access = db.query(PatientDoctorAccess).filter(
+            PatientDoctorAccess.PatientID == patient_id,
+            PatientDoctorAccess.DoctorID == current_user.doctor_profile.DoctorID,
+            PatientDoctorAccess.Status == "ACTIVE"
+        ).first()
+        if not access:
+            raise HTTPException(status_code=403, detail="No active doctor permission for patient diagnoses")
+
     records = db.query(MedicalRecord).filter(MedicalRecord.PatientID == patient_id).all()
     record_ids = [r.RecordID for r in records]
     if not record_ids:
@@ -177,6 +195,15 @@ def get_patient_lab_reports(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if current_user.Role == "DOCTOR" and current_user.doctor_profile:
+        access = db.query(PatientDoctorAccess).filter(
+            PatientDoctorAccess.PatientID == patient_id,
+            PatientDoctorAccess.DoctorID == current_user.doctor_profile.DoctorID,
+            PatientDoctorAccess.Status == "ACTIVE"
+        ).first()
+        if not access:
+            raise HTTPException(status_code=403, detail="No active doctor permission for patient lab reports")
+
     tests = db.query(LabTest).filter(LabTest.PatientID == patient_id).all()
     test_ids = [t.TestID for t in tests]
     if not test_ids:
@@ -190,6 +217,15 @@ def get_patient_prescriptions(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if current_user.Role == "DOCTOR" and current_user.doctor_profile:
+        access = db.query(PatientDoctorAccess).filter(
+            PatientDoctorAccess.PatientID == patient_id,
+            PatientDoctorAccess.DoctorID == current_user.doctor_profile.DoctorID,
+            PatientDoctorAccess.Status == "ACTIVE"
+        ).first()
+        if not access:
+            raise HTTPException(status_code=403, detail="No active doctor permission for patient prescriptions")
+
     audit_service.log_access(db, current_user.UserID, "Prescription", patient_id, action="VIEW")
     return db.query(Prescription).filter(Prescription.PatientID == patient_id).all()
 

@@ -4,6 +4,7 @@ from app.schemas.user import UserOut
 from app.schemas.organization import OrganizationOut
 
 class DoctorBase(BaseModel):
+    HospitalName: Optional[str] = None
     Specialty: Optional[str] = None
     LicenseNumber: Optional[str] = None
     Phone: Optional[str] = None
@@ -14,6 +15,7 @@ class DoctorCreate(DoctorBase):
 
 class DoctorUpdate(DoctorBase):
     FullName: Optional[str] = None
+    HospitalName: Optional[str] = None
 
 class DoctorOut(DoctorBase):
     DoctorID: int
