@@ -10,17 +10,10 @@ import { useToast } from "../context/ToastContext";
 import { 
   User, 
   Mail, 
-  Phone, 
-  ShieldCheck, 
   Building2, 
   HeartPulse, 
   Save, 
-  Calendar, 
-  MapPin, 
-  Award, 
-  IdCard,
-  Sparkles,
-  CheckCircle2
+  IdCard
 } from "lucide-react";
 import "../styles/Dashboard.css";
 

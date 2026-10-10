@@ -1,10 +1,8 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.medical_record import MedicalRecord
-from app.models.patient import Patient
-from app.models.doctor import Doctor
 from app.models.user import User
 from app.schemas.medical_record import MedicalRecordOut, MedicalRecordCreate, MedicalRecordUpdate
 from app.dependencies.auth_deps import get_current_user

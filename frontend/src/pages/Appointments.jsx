@@ -6,6 +6,7 @@ import PageHeader from "../components/PageHeader";
 import Badge from "../components/Badge";
 import Modal from "../components/Modal";
 import SkeletonLoader from "../components/SkeletonLoader";
+import PatientSelector from "../components/PatientSelector";
 import { appointmentApi, patientApi, doctorApi, getUserSession } from "../services/api";
 import { filterByRole } from "../utils/roleFilter";
 import { useToast } from "../context/ToastContext";

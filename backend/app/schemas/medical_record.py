@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 from pydantic import BaseModel, ConfigDict
 from app.schemas.patient import PatientOut
 from app.schemas.doctor import DoctorOut

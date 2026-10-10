@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from sqlalchemy.orm import Session
 from app.models.patient_doctor_access import PatientDoctorAccess
 from app.models.patient_access_permission import PatientAccessPermission

@@ -14,11 +14,10 @@ import {
   Award,
   Sparkles
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { getUserSession } from "../services/api";
 
 export default function Footer() {
-  const location = useLocation();
   const user = getUserSession();
   const role = (user?.role || "").toUpperCase();
 

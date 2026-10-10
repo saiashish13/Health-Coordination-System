@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-from app.database import engine, SessionLocal, Base
+from app.database import SessionLocal
 from app.models.medicine import Medicine
 
 def seed_world_medicines():

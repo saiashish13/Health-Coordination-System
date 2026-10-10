@@ -1,17 +1,16 @@
 from datetime import datetime, timezone
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.ai_interaction import AIInteraction
 from app.models.ai_recommendation import AIRecommendation
 from app.models.medical_record import MedicalRecord
 from app.models.patient import Patient
-from app.models.doctor import Doctor
 from app.models.user import User
 from app.schemas.ai import (
     AIInteractionOut, AIInteractionCreate,
-    AIRecommendationOut, AIRecommendationCreate, AIRecommendationReviewUpdate
+    AIRecommendationOut, AIRecommendationCreate
 )
 from app.dependencies.auth_deps import get_current_user
 from app.services.ai_service import ai_service

@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, AlertCircle, Info, ShieldAlert } from "lucide-react";
+import { CheckCircle2, Clock, Info, ShieldAlert } from "lucide-react";
 
 export default function Badge({ status, text }) {
   const getBadgeMeta = (val) => {

@@ -7,7 +7,7 @@ import Badge from "../components/Badge";
 import Modal from "../components/Modal";
 import SkeletonLoader from "../components/SkeletonLoader";
 import PatientSelector from "../components/PatientSelector";
-import { patientApi, permissionApi, doctorApi, getUserSession } from "../services/api";
+import { patientApi, permissionApi, getUserSession } from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { 
   Users as UsersIcon, 
@@ -21,10 +21,7 @@ import {
   Plus, 
   Mail, 
   Phone, 
-  User, 
-  HeartPulse,
-  Clock,
-  X
+  User
 } from "lucide-react";
 import "../styles/Dashboard.css";
 

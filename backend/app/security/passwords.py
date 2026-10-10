@@ -1,4 +1,3 @@
-import hashlib
 from passlib.context import CryptContext
 
 # Use pbkdf2_sha256 or bcrypt for robust secure hashing without 72-byte truncation issues

@@ -1,16 +1,15 @@
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.permission_request import PermissionRequest
 from app.models.patient_doctor_access import PatientDoctorAccess
 from app.models.patient_access_permission import PatientAccessPermission
 from app.models.patient import Patient
-from app.models.doctor import Doctor
 from app.models.user import User
 from app.schemas.permission import (
-    PermissionRequestOut, PermissionRequestCreate, PermissionRequestStatusUpdate,
+    PermissionRequestOut, PermissionRequestCreate,
     PatientDoctorAccessOut, PatientAccessPermissionOut
 )
 from app.dependencies.auth_deps import get_current_user

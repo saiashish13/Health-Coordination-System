@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { WORLD_MEDICINES, MEDICINE_CATEGORIES, searchWorldMedicines } from "../data/worldMedicines";
+import { MEDICINE_CATEGORIES, searchWorldMedicines } from "../data/worldMedicines";
 import { medicineApi } from "../services/api";
 import { Search, Pill, Check, Plus, Globe, ChevronDown } from "lucide-react";
 
@@ -7,7 +7,6 @@ export default function MedicineSelector({ value, onChange, onSelectMedicineDeta
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
-  const [customMedicine, setCustomMedicine] = useState("");
   const dropdownRef = useRef(null);
 
   const filteredMedicines = searchWorldMedicines(searchTerm, selectedCategory);
@@ -39,7 +38,7 @@ export default function MedicineSelector({ value, onChange, onSelectMedicineDeta
   };
 
   const handleAddCustom = async () => {
-    const nameToAdd = searchTerm.trim() || customMedicine.trim();
+    const nameToAdd = searchTerm.trim();
     if (nameToAdd) {
       try {
         await medicineApi.create({

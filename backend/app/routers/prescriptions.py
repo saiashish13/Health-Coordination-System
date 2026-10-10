@@ -1,11 +1,10 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.prescription import Prescription
 from app.models.prescription_item import PrescriptionItem
 from app.models.patient import Patient
-from app.models.doctor import Doctor
 from app.models.medicine import Medicine
 from app.models.user import User
 from app.schemas.prescription import PrescriptionOut, PrescriptionCreate, PrescriptionItemOut, PrescriptionItemCreate

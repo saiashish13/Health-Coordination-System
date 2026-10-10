@@ -1,11 +1,10 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.lab_test import LabTest
 from app.models.lab_report import LabReport
 from app.models.patient import Patient
-from app.models.organization import Organization
 from app.models.user import User
 from app.schemas.lab import LabTestOut, LabTestCreate, LabTestStatusUpdate, LabReportOut, LabReportCreate
 from app.dependencies.auth_deps import get_current_user

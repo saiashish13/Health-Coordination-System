@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
@@ -14,7 +14,7 @@ from app.schemas.doctor import DoctorOut
 from app.schemas.organization import OrganizationOut
 from app.schemas.appointment import AppointmentOut
 from app.schemas.audit import AccessAuditLogOut
-from app.dependencies.auth_deps import require_admin, get_current_user
+from app.dependencies.auth_deps import require_admin
 
 router = APIRouter(prefix="/admin", tags=["Admin Operations"], dependencies=[Depends(require_admin)])
 

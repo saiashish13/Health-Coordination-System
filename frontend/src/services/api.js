@@ -58,7 +58,7 @@ async function request(endpoint, options = {}) {
   try {
     response = await fetch(`${API_BASE_URL}${endpoint}`, config);
   } catch (netErr) {
-    throw new Error(`Unable to connect to Healthcare API at ${API_BASE_URL}. Please verify the Python backend is running.`);
+    throw new Error(`Unable to connect to Healthcare API at ${API_BASE_URL}. Please verify the Python backend is running.`, { cause: netErr });
   }
 
   if (response.status === 401) {

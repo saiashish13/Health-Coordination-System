@@ -9,7 +9,7 @@ import SkeletonLoader from "../components/SkeletonLoader";
 import { medicineApi, getUserSession } from "../services/api";
 import { WORLD_MEDICINES, MEDICINE_CATEGORIES } from "../data/worldMedicines";
 import { useToast } from "../context/ToastContext";
-import { Pill, Plus, Search, Globe, Filter } from "lucide-react";
+import { Pill, Plus, Search, Filter } from "lucide-react";
 import "../styles/Dashboard.css";
 
 function Medicines() {
