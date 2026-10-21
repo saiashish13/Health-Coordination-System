@@ -116,14 +116,14 @@ The platform implements a decoupled, modern client-server architecture:
 graph TD
     UserClient["React 19 SPA (Vite Dev / Static Build)"]
     
-    subgraph Frontend Layer
+    subgraph Frontend_Layer ["Frontend Layer"]
         UserClient --> ThemeEngine["Theme Context (Peach Fuzz / Neon Dusk)"]
         UserClient --> RoleRouter["React Router v7 (Role-Guarded Views)"]
         UserClient --> APIClient["Centralized Axios/Fetch API Client (api.js)"]
         UserClient --> SupabaseOAuth["Supabase Client (Google SSO)"]
     end
 
-    subgraph Backend Layer (FastAPI on Port 8000)
+    subgraph Backend_Layer ["Backend Layer (FastAPI on Port 8000)"]
         APIClient -->|Bearer JWT| AuthMiddleware["FastAPI Security Scheme (HTTPBearer)"]
         AuthMiddleware --> RBAC["Role Enforcement (require_role)"]
         
@@ -135,7 +135,7 @@ graph TD
         Routers --> StorageUtil["Storage Handler (/uploads Static Mount)"]
     end
 
-    subgraph Persistence Layer
+    subgraph Persistence_Layer ["Persistence Layer"]
         PermService --> ORM["SQLAlchemy 2.0 ORM Engine"]
         AuditService --> ORM
         Routers --> ORM
