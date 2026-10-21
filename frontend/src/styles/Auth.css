@@ -20,6 +20,7 @@
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-lg);
+  transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
   animation: authBoxEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -37,13 +38,14 @@
 /* Left/Right Branding Banner Side */
 .auth-branding-panel {
   position: relative;
-  background: var(--accent-gradient);
+  background: var(--auth-branding-bg);
   padding: 48px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  color: #ffffff;
+  color: var(--auth-branding-text);
   overflow: hidden;
+  transition: background 0.4s ease, color 0.4s ease;
 }
 
 .branding-content {
@@ -57,7 +59,8 @@
   gap: 6px;
   padding: 6px 14px;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--auth-branding-badge-bg);
+  color: var(--auth-branding-text);
   backdrop-filter: blur(8px);
   font-size: 13px;
   font-weight: 700;
@@ -70,14 +73,16 @@
   font-size: 32px;
   font-weight: 800;
   line-height: 1.25;
-  color: #ffffff;
+  color: var(--auth-branding-text);
   margin-bottom: 16px;
+  transition: color 0.4s ease;
 }
 
 .branding-subtitle {
   font-size: 15px;
-  color: rgba(255, 255, 255, 0.88);
+  color: var(--auth-branding-subtext) !important;
   line-height: 1.6;
+  transition: color 0.4s ease;
 }
 
 /* Floating Shapes in Banner */
@@ -90,7 +95,7 @@
 .floating-shape {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--auth-floating-shape);
   backdrop-filter: blur(10px);
   animation: floatShape 16s ease-in-out infinite alternate;
 }
@@ -128,10 +133,16 @@
   position: relative;
   z-index: 2;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--auth-branding-subtext);
   font-style: italic;
-  border-left: 2px solid rgba(255, 255, 255, 0.4);
+  border-left: 2px solid var(--auth-branding-border);
   padding-left: 12px;
+  transition: color 0.4s ease, border-color 0.4s ease;
+}
+
+.branding-footer-quote p,
+.branding-footer-quote span {
+  color: var(--auth-branding-subtext) !important;
 }
 
 /* Form Panel Side */
@@ -141,6 +152,7 @@
   flex-direction: column;
   justify-content: center;
   background: var(--bg-card-solid);
+  transition: background-color 0.4s ease;
 }
 
 .form-header {
@@ -226,11 +238,11 @@
   font-size: 14px;
   font-family: inherit;
   color: var(--text-primary);
-  background: var(--bg-card);
+  background: var(--bg-input, var(--bg-card));
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color 0.4s ease, color 0.4s ease;
 }
 
 .form-input.has-right-icon {
@@ -238,13 +250,13 @@
 }
 
 .form-input:focus {
-  border-color: var(--primary);
+  border-color: var(--focus-ring, var(--primary));
   box-shadow: 0 0 0 4px var(--primary-light);
   background: var(--bg-card-solid);
 }
 
 .form-group:focus-within .input-icon-left {
-  color: var(--primary);
+  color: var(--accent);
 }
 
 .form-input.is-invalid {
@@ -319,10 +331,15 @@
 /* Role Selector Select Box */
 .role-select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23203C3D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   padding-right: 40px;
+}
+
+[data-theme="dark"] .role-select,
+.dark .role-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2300D4FF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
 /* Social Login Buttons */
@@ -352,7 +369,8 @@
 
 .btn-social:hover:not(:disabled) {
   background: var(--primary-light);
-  border-color: var(--primary);
+  border-color: var(--accent);
+  color: var(--accent);
   transform: translateY(-1px);
 }
 
@@ -390,8 +408,8 @@
 .spinner {
   width: 18px;
   height: 18px;
-  border: 2.5px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--btn-primary-text);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -410,7 +428,7 @@
 
 .auth-switch-link {
   font-weight: 700;
-  color: var(--primary);
+  color: var(--link-color, var(--primary));
 }
 
 .auth-switch-link:hover {

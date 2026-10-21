@@ -109,7 +109,7 @@ export default function MedicineSelector({ value, onChange, onSelectMedicineDeta
           backdropFilter: "blur(16px)",
           border: "1px solid var(--border-color)",
           borderRadius: "var(--radius-md)",
-          boxShadow: "0 12px 32px rgba(0,0,0,0.25)",
+          boxShadow: "var(--shadow-lg)",
           maxHeight: "360px",
           display: "flex",
           flexDirection: "column",
@@ -179,7 +179,7 @@ export default function MedicineSelector({ value, onChange, onSelectMedicineDeta
                       transition: "all 0.15s ease",
                       borderBottom: "1px dashed var(--border-color)"
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = isSelected ? "var(--primary-light)" : "rgba(99, 102, 241, 0.08)"}
+                    onMouseEnter={(e) => e.currentTarget.style.background = isSelected ? "var(--primary-light)" : "var(--bg-hover)"}
                     onMouseLeave={(e) => e.currentTarget.style.background = isSelected ? "var(--primary-light)" : "transparent"}
                   >
                     <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>

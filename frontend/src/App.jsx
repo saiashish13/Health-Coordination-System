@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider } from "./context/ToastContext";
 import ScrollProgress from "./components/ScrollProgress";
+import Background3D from "./components/Background3D";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -46,6 +47,7 @@ function App() {
     <ThemeProvider>
       <ToastProvider>
         <BrowserRouter>
+          <Background3D />
           <ScrollProgress />
           <Routes>
 

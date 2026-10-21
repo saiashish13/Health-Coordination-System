@@ -256,7 +256,7 @@ function Appointments() {
                   className="form-input"
                   value={`${currentUser.full_name || currentUser.fullName || currentUser.email || "Patient"} (ID: #${currentUser.profile_id || 1})`}
                   disabled
-                  style={{ background: "rgba(99, 102, 241, 0.08)", fontWeight: "600", color: "var(--primary)" }}
+                  style={{ background: "var(--disabled)", fontWeight: "600", color: "var(--primary)" }}
                 />
               ) : (
                 <PatientSelector

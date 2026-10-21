@@ -374,7 +374,7 @@ function Patients() {
                 <div>
                   {permissionRestricted && (
                     <div style={{
-                      background: "rgba(239, 68, 68, 0.1)",
+                      background: "var(--error-bg)",
                       border: "1px solid var(--error)",
                       borderRadius: "var(--radius-md)",
                       padding: "16px",

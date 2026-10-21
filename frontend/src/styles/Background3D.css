@@ -1,0 +1,378 @@
+/* ========================================================
+   3D LAYERED DEPTH BACKGROUND STYLES
+   - Fixed, full-screen decorative background layer (z-index: -1)
+   - 3D perspective with 4 depth layers + perspective grid floor
+   - Volumetric 3D shapes: spheres, glowing toruses, rounded cubes
+   - 60fps GPU-accelerated transforms & smooth mouse parallax
+   - All colors driven by theme CSS variables (--shape-*, --glow)
+   ======================================================== */
+
+.bg-3d-scene-container {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  perspective: 1000px;
+  perspective-origin: 50% 50%;
+  transform-style: preserve-3d;
+}
+
+/* Layer Base: stacked layers positioned across the z-axis */
+.depth-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.12s cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+/* Layer 1: Far Depth Layer (blurriest, smallest, lowest opacity) */
+.layer-far {
+  opacity: 0.50;
+  filter: blur(12px);
+  transform: translateZ(-240px);
+}
+
+/* Layer 2: Mid-Far Depth Layer */
+.layer-mid-far {
+  opacity: 0.65;
+  filter: blur(5px);
+  transform: translateZ(-120px);
+}
+
+/* Layer 3: Mid Depth Layer */
+.layer-mid {
+  opacity: 0.85;
+  filter: blur(1.5px);
+  transform: translateZ(0px);
+}
+
+/* Layer 4: Near Depth Layer (sharpest, largest, highest opacity) */
+.layer-near {
+  opacity: 0.95;
+  filter: blur(0px);
+  transform: translateZ(90px);
+}
+
+/* ========================================================
+   PERSPECTIVE GRID FLOOR
+   ======================================================== */
+.bg-perspective-floor {
+  position: absolute;
+  bottom: -15%;
+  left: -25%;
+  width: 150%;
+  height: 55%;
+  transform: rotateX(62deg) translateZ(-60px);
+  transform-origin: 50% 100%;
+  background-image: 
+    linear-gradient(to right, var(--grid-floor-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-floor-color) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 65%, black 25%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 65%, black 25%, transparent 80%);
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.15s ease-out;
+  will-change: transform;
+}
+
+/* ========================================================
+   VOLUMETRIC 3D SHAPES (Pure CSS Gradients & Shadows)
+   ======================================================== */
+
+/* Base 3D shape class */
+.shape-3d {
+  position: absolute;
+  pointer-events: none;
+  transform-style: preserve-3d;
+  transition: background 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+/* Shape A: Primary Volumetric Sphere */
+.shape-sphere-1 {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--shape-1-specular) 0%, var(--shape-1-specular) 20%, var(--shape-1) 62%, var(--shape-1-shadow) 100%);
+  box-shadow: 
+    inset -12px -12px 28px rgba(0, 0, 0, 0.40),
+    0 20px 48px var(--shape-glow);
+}
+
+/* Shape B: Glowing Torus / Ring */
+.shape-torus-1 {
+  border-radius: 50%;
+  box-shadow: 
+    inset 0 0 24px var(--shape-2),
+    0 0 36px var(--shape-glow-accent),
+    inset -6px -6px 14px rgba(0, 0, 0, 0.35);
+  border: 20px solid var(--shape-2);
+  background: radial-gradient(circle at 30% 30%, var(--shape-glow-accent) 0%, transparent 60%);
+}
+
+/* Shape C: Accent Volumetric Sphere */
+.shape-sphere-2 {
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, var(--shape-2-specular) 0%, var(--shape-2-specular) 22%, var(--shape-2) 64%, var(--shape-2-shadow) 100%);
+  box-shadow: 
+    inset -10px -10px 24px rgba(0, 0, 0, 0.30),
+    0 18px 40px var(--shape-glow-accent);
+}
+
+/* Shape D: Floating Rounded 3D Cube / Gem */
+.shape-cube-1 {
+  border-radius: 32px;
+  background: linear-gradient(135deg, var(--shape-3-specular) 0%, var(--shape-3) 50%, var(--shape-3-shadow) 100%);
+  box-shadow: 
+    inset 4px 4px 12px var(--shape-glow),
+    inset -8px -8px 20px rgba(0, 0, 0, 0.45),
+    0 22px 45px var(--shape-glow);
+}
+
+/* Shape E: Floating 3D Capsule / Pill */
+.shape-pill-1 {
+  border-radius: 9999px;
+  background: linear-gradient(155deg, var(--shape-4-specular) 0%, var(--shape-4) 52%, var(--shape-4-shadow) 100%);
+  box-shadow: 
+    inset 4px 4px 14px var(--shape-glow),
+    inset -6px -6px 18px rgba(0, 0, 0, 0.38),
+    0 18px 38px var(--shape-glow);
+}
+
+/* Shape F: Tertiary Ambient Orb */
+.shape-sphere-3 {
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 32%, var(--shape-3-specular) 0%, var(--shape-3-specular) 20%, var(--shape-3) 60%, var(--shape-3-shadow) 100%);
+  box-shadow: 
+    inset -8px -8px 20px rgba(0, 0, 0, 0.35),
+    0 16px 36px var(--shape-glow);
+}
+
+/* ========================================================
+   SHAPE POSITIONS & DIMENSIONS PER LAYER
+   ======================================================== */
+
+/* Layer Far Elements */
+.far-orb-1 {
+  top: 8%;
+  right: 12%;
+  width: 220px;
+  height: 220px;
+  animation: floatFar1 34s ease-in-out infinite alternate;
+}
+
+.far-torus-1 {
+  bottom: 12%;
+  left: 6%;
+  width: 260px;
+  height: 260px;
+  border-width: 28px;
+  animation: floatFar2 40s ease-in-out infinite alternate;
+  animation-delay: -9s;
+}
+
+/* Layer Mid-Far Elements */
+.midfar-sphere-1 {
+  top: 48%;
+  left: 8%;
+  width: 170px;
+  height: 170px;
+  animation: floatMidFar1 28s ease-in-out infinite alternate;
+  animation-delay: -4s;
+}
+
+.midfar-cube-1 {
+  top: 15%;
+  left: 28%;
+  width: 120px;
+  height: 120px;
+  transform: rotateX(25deg) rotateY(35deg) rotateZ(15deg);
+  animation: floatMidFar2 32s ease-in-out infinite alternate;
+  animation-delay: -14s;
+}
+
+/* Layer Mid Elements */
+.mid-torus-1 {
+  top: 36%;
+  right: 8%;
+  width: 190px;
+  height: 190px;
+  border-width: 20px;
+  animation: floatMid1 25s ease-in-out infinite alternate;
+  animation-delay: -6s;
+}
+
+.mid-pill-1 {
+  bottom: 18%;
+  left: 42%;
+  width: 180px;
+  height: 80px;
+  transform: rotate(-25deg);
+  animation: floatMid2 30s ease-in-out infinite alternate;
+  animation-delay: -12s;
+}
+
+/* Layer Near Elements */
+.near-sphere-1 {
+  bottom: 8%;
+  right: 14%;
+  width: 140px;
+  height: 140px;
+  animation: floatNear1 22s ease-in-out infinite alternate;
+  animation-delay: -2s;
+}
+
+.near-torus-1 {
+  top: 14%;
+  left: 5%;
+  width: 130px;
+  height: 130px;
+  border-width: 16px;
+  animation: floatNear2 26s ease-in-out infinite alternate;
+  animation-delay: -16s;
+}
+
+/* ========================================================
+   SMOOTH 3D FLOATING & ROTATION KEYFRAMES
+   ======================================================== */
+
+@keyframes floatFar1 {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate3d(-35px, 45px, 30px) rotate(45deg) scale(1.06);
+  }
+  100% {
+    transform: translate3d(25px, -30px, -20px) rotate(90deg) scale(0.95);
+  }
+}
+
+@keyframes floatFar2 {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate3d(40px, -50px, 40px) rotate(-60deg) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-30px, 35px, -30px) rotate(-120deg) scale(0.92);
+  }
+}
+
+@keyframes floatMidFar1 {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate3d(30px, -40px, 25px) rotate(30deg) scale(1.05);
+  }
+  100% {
+    transform: translate3d(-25px, 35px, -15px) rotate(60deg) scale(0.96);
+  }
+}
+
+@keyframes floatMidFar2 {
+  0% {
+    transform: translate3d(0, 0, 0) rotateX(25deg) rotateY(35deg) rotateZ(15deg);
+  }
+  50% {
+    transform: translate3d(-40px, 45px, 35px) rotateX(55deg) rotateY(65deg) rotateZ(45deg);
+  }
+  100% {
+    transform: translate3d(30px, -35px, -25px) rotateX(15deg) rotateY(15deg) rotateZ(-15deg);
+  }
+}
+
+@keyframes floatMid1 {
+  0% {
+    transform: translate3d(0, 0, 0) rotateX(20deg) rotateY(15deg);
+  }
+  50% {
+    transform: translate3d(-30px, 35px, 30px) rotateX(45deg) rotateY(45deg);
+  }
+  100% {
+    transform: translate3d(25px, -30px, -20px) rotateX(-15deg) rotateY(-20deg);
+  }
+}
+
+@keyframes floatMid2 {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(-25deg);
+  }
+  50% {
+    transform: translate3d(35px, -30px, 20px) rotate(-5deg);
+  }
+  100% {
+    transform: translate3d(-30px, 25px, -20px) rotate(-45deg);
+  }
+}
+
+@keyframes floatNear1 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-25px, -35px, 20px) scale(1.08);
+  }
+  100% {
+    transform: translate3d(20px, 30px, -15px) scale(0.94);
+  }
+}
+
+@keyframes floatNear2 {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(30px, 35px, 25px) rotate(50deg);
+  }
+  100% {
+    transform: translate3d(-20px, -25px, -15px) rotate(100deg);
+  }
+}
+
+/* ========================================================
+   MOBILE RESPONSIVENESS & REDUCED MOTION
+   ======================================================== */
+
+@media (max-width: 768px) {
+  .layer-near {
+    display: none;
+  }
+  .far-torus-1 {
+    width: 180px;
+    height: 180px;
+    border-width: 18px;
+  }
+  .far-orb-1 {
+    width: 160px;
+    height: 160px;
+  }
+  .mid-torus-1 {
+    width: 140px;
+    height: 140px;
+    border-width: 16px;
+  }
+  .bg-perspective-floor {
+    height: 40%;
+    background-size: 36px 36px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shape-3d {
+    animation: none !important;
+  }
+  .depth-layer {
+    transition: none !important;
+    transform: none !important;
+  }
+  .bg-perspective-floor {
+    transition: none !important;
+    transform: rotateX(60deg) !important;
+  }
+}

@@ -183,16 +183,17 @@ export default function Footer() {
               width: "36px",
               height: "36px",
               borderRadius: "10px",
-              background: "var(--accent-gradient)",
+              background: "var(--brand-icon-bg, var(--primary))",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 4px 12px rgba(2, 132, 199, 0.3)"
+              boxShadow: "var(--shadow-sm)",
+              transition: "background 0.4s ease, color 0.4s ease"
             }}>
-              <Activity size={20} color="#fff" />
+              <Activity size={20} color="var(--brand-icon-color)" />
             </div>
             <span style={{ fontWeight: "800", fontSize: "20px", color: "var(--text-primary)" }}>
-              Health<span className="gradient-text">Sync</span>
+              Health<span className="brand-highlight">Sync</span>
             </span>
           </div>
 
@@ -277,7 +278,7 @@ export default function Footer() {
           <h4 style={{ color: "var(--text-primary)", fontSize: "15px", fontWeight: "700", marginBottom: "14px" }}>
             Security & Compliance
           </h4>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--emerald)", fontWeight: "700", fontSize: "13px", marginBottom: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--accent)", fontWeight: "700", fontSize: "13px", marginBottom: "10px" }}>
             <Shield size={16} />
             <span>256-bit Encrypted HIPAA Platform</span>
           </div>

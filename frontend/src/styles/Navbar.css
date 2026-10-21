@@ -39,12 +39,13 @@
   width: 38px;
   height: 38px;
   border-radius: var(--radius-sm);
-  background: var(--accent-gradient);
+  background: var(--brand-icon-bg, var(--primary));
+  color: var(--brand-icon-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
-  transition: transform var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), background 0.4s ease, color 0.4s ease;
 }
 
 .navbar-brand:hover .brand-icon {
@@ -56,10 +57,12 @@
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.03em;
+  transition: color 0.4s ease;
 }
 
 .brand-highlight {
-  color: var(--primary);
+  color: var(--accent);
+  transition: color 0.4s ease;
 }
 
 /* Desktop Navigation Links */
@@ -81,12 +84,12 @@
 }
 
 .nav-link:hover {
-  color: var(--primary);
+  color: var(--link-color, var(--primary));
   background-color: var(--primary-light);
 }
 
 .nav-link.active {
-  color: var(--primary);
+  color: var(--nav-link-active, var(--primary));
   background-color: var(--primary-light);
   font-weight: 700;
 }
@@ -100,7 +103,7 @@
   width: 16px;
   height: 3px;
   border-radius: 2px;
-  background: var(--accent-gradient);
+  background: var(--accent-underline, var(--accent));
 }
 
 /* Navbar Actions Right */
@@ -122,11 +125,11 @@
   justify-content: center;
   cursor: pointer;
   color: var(--text-primary);
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  transition: background-color 0.4s ease, border-color 0.4s ease, transform var(--transition-fast), color 0.4s ease;
 }
 
 .theme-toggle-btn:hover {
-  border-color: var(--primary);
+  border-color: var(--accent);
   transform: scale(1.06);
 }
 
@@ -141,13 +144,13 @@
 
 .sun-icon, .moon-icon {
   position: absolute;
-  transition: transform var(--transition-slow), opacity var(--transition-slow);
+  transition: transform var(--transition-slow), opacity var(--transition-slow), color 0.4s ease;
 }
 
 .is-light .sun-icon {
   opacity: 1;
   transform: rotate(0deg) scale(1);
-  color: #f59e0b;
+  color: var(--theme-toggle-icon);
 }
 
 .is-light .moon-icon {
@@ -163,7 +166,7 @@
 .is-dark .moon-icon {
   opacity: 1;
   transform: rotate(0deg) scale(1);
-  color: #38bdf8;
+  color: var(--theme-toggle-icon);
 }
 
 /* Auth Buttons Group */
@@ -188,24 +191,25 @@
   border-radius: var(--radius-full);
   cursor: pointer;
   color: var(--text-primary);
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast), background-color 0.4s ease;
 }
 
 .profile-avatar-btn:hover {
-  border-color: var(--primary);
+  border-color: var(--accent);
 }
 
 .avatar-circle {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--accent-gradient);
-  color: #ffffff;
+  background: var(--avatar-bg, var(--primary));
+  color: var(--avatar-text);
   font-weight: 700;
   font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.4s ease, color 0.4s ease;
 }
 
 .avatar-role {
@@ -332,7 +336,7 @@
 .mobile-drawer-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--modal-backdrop);
   backdrop-filter: blur(4px);
   z-index: 2000;
   display: flex;

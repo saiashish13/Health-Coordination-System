@@ -68,13 +68,13 @@ function PatientDashboard() {
               <div>
                 <div className="metric-card-top">
                   <span className="metric-title">History Records</span>
-                  <div className="metric-icon-box" style={{ color: "#6366f1", background: "rgba(99, 102, 241, 0.1)" }}>
+                  <div className="metric-icon-box metric-box-1">
                     <FileText size={22} />
                   </div>
                 </div>
                 <div className="metric-value">{data?.metrics?.records || 0}</div>
               </div>
-              <Link to="/medical-records" className="metric-link" style={{ color: "#6366f1" }}>
+              <Link to="/medical-records" className="metric-link metric-link-1">
                 <span>View Medical Records</span>
                 <ArrowRight size={16} />
               </Link>
@@ -85,13 +85,13 @@ function PatientDashboard() {
               <div>
                 <div className="metric-card-top">
                   <span className="metric-title">Completed Lab Reports</span>
-                  <div className="metric-icon-box" style={{ color: "#10b981", background: "rgba(16, 185, 129, 0.1)" }}>
+                  <div className="metric-icon-box metric-box-2">
                     <FlaskConical size={22} />
                   </div>
                 </div>
                 <div className="metric-value">{data?.metrics?.labReports || 0}</div>
               </div>
-              <Link to="/lab-reports" className="metric-link" style={{ color: "#10b981" }}>
+              <Link to="/lab-reports" className="metric-link metric-link-2">
                 <span>View Lab Reports</span>
                 <ArrowRight size={16} />
               </Link>
@@ -102,13 +102,13 @@ function PatientDashboard() {
               <div>
                 <div className="metric-card-top">
                   <span className="metric-title">Active Prescriptions</span>
-                  <div className="metric-icon-box" style={{ color: "#f59e0b", background: "rgba(245, 158, 11, 0.1)" }}>
+                  <div className="metric-icon-box metric-box-3">
                     <Pill size={22} />
                   </div>
                 </div>
                 <div className="metric-value">{data?.metrics?.prescriptions || 0}</div>
               </div>
-              <Link to="/prescriptions" className="metric-link" style={{ color: "#f59e0b" }}>
+              <Link to="/prescriptions" className="metric-link metric-link-3">
                 <span>View Prescriptions</span>
                 <ArrowRight size={16} />
               </Link>
@@ -119,13 +119,13 @@ function PatientDashboard() {
               <div>
                 <div className="metric-card-top">
                   <span className="metric-title">Pharmacy Orders</span>
-                  <div className="metric-icon-box" style={{ color: "#ec4899", background: "rgba(236, 72, 153, 0.1)" }}>
+                  <div className="metric-icon-box metric-box-4">
                     <ShoppingBag size={22} />
                   </div>
                 </div>
                 <div className="metric-value">{data?.metrics?.medicationOrders || 0}</div>
               </div>
-              <Link to="/medication-orders" className="metric-link" style={{ color: "#ec4899" }}>
+              <Link to="/medication-orders" className="metric-link metric-link-4">
                 <span>View Orders</span>
                 <ArrowRight size={16} />
               </Link>

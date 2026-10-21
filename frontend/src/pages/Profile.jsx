@@ -203,14 +203,15 @@ function Profile() {
                   width: "64px",
                   height: "64px",
                   borderRadius: "50%",
-                  background: "var(--accent-gradient)",
-                  color: "#ffffff",
+                  background: "var(--avatar-bg, var(--primary))",
+                  color: "var(--avatar-text)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontWeight: "800",
                   fontSize: "24px",
-                  boxShadow: "0 4px 14px rgba(2, 132, 199, 0.3)"
+                  boxShadow: "0 4px 14px var(--primary-glow)",
+                  transition: "background 0.4s ease, color 0.4s ease"
                 }}>
                   {(formData.fullName || formData.email || "U").charAt(0).toUpperCase()}
                 </div>

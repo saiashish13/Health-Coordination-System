@@ -117,7 +117,7 @@ export default function PatientSelector({
           backdropFilter: "blur(16px)",
           border: "1px solid var(--border-color)",
           borderRadius: "var(--radius-md)",
-          boxShadow: "0 10px 28px rgba(0,0,0,0.25)",
+          boxShadow: "var(--shadow-lg)",
           maxHeight: "260px",
           overflowY: "auto",
           padding: "6px"
@@ -150,7 +150,7 @@ export default function PatientSelector({
                     marginBottom: "4px"
                   }}
                   onMouseEnter={(e) => {
-                    if (!isSelected) e.currentTarget.style.background = "rgba(99, 102, 241, 0.08)";
+                    if (!isSelected) e.currentTarget.style.background = "var(--bg-hover)";
                   }}
                   onMouseLeave={(e) => {
                     if (!isSelected) e.currentTarget.style.background = "transparent";

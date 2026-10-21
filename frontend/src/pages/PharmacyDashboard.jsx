@@ -57,13 +57,13 @@ function PharmacyDashboard() {
               <div>
                 <div className="metric-card-top">
                   <span className="metric-title">Dispense Orders</span>
-                  <div className="metric-icon-box" style={{ color: "#f59e0b", background: "rgba(245, 158, 11, 0.1)" }}>
+                  <div className="metric-icon-box metric-box-3">
                     <ShoppingBag size={22} />
                   </div>
                 </div>
                 <div className="metric-value">{data?.metrics?.orders || 0}</div>
               </div>
-              <Link to="/medication-orders" className="metric-link" style={{ color: "#f59e0b" }}>
+              <Link to="/medication-orders" className="metric-link metric-link-3">
                 <span>Fulfill Orders</span>
                 <ArrowRight size={16} />
               </Link>
@@ -73,13 +73,13 @@ function PharmacyDashboard() {
               <div>
                 <div className="metric-card-top">
                   <span className="metric-title">Prescriptions</span>
-                  <div className="metric-icon-box" style={{ color: "#10b981", background: "rgba(16, 185, 129, 0.1)" }}>
+                  <div className="metric-icon-box metric-box-2">
                     <FileText size={22} />
                   </div>
                 </div>
                 <div className="metric-value">{data?.metrics?.prescriptions || 0}</div>
               </div>
-              <Link to="/prescriptions" className="metric-link" style={{ color: "#10b981" }}>
+              <Link to="/prescriptions" className="metric-link metric-link-2">
                 <span>View Prescriptions</span>
                 <ArrowRight size={16} />
               </Link>

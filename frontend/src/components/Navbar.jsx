@@ -169,7 +169,7 @@ export default function Navbar() {
         {/* Brand Logo */}
         <Link to={getDashboardPath()} className="navbar-brand">
           <div className="brand-icon">
-            <Activity size={22} color="#ffffff" />
+            <Activity size={22} color="var(--brand-icon-color)" />
           </div>
           <span className="brand-text">Health<span className="brand-highlight">Sync</span></span>
         </Link>

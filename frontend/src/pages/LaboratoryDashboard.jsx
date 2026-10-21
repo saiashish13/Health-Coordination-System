@@ -57,13 +57,13 @@ function LaboratoryDashboard() {
               <div>
                 <div className="metric-card-top">
                   <span className="metric-title">Generated Reports</span>
-                  <div className="metric-icon-box" style={{ color: "#10b981", background: "rgba(16, 185, 129, 0.1)" }}>
+                  <div className="metric-icon-box metric-box-2">
                     <FileSpreadsheet size={22} />
                   </div>
                 </div>
                 <div className="metric-value">{data?.metrics?.reports || 0}</div>
               </div>
-              <Link to="/lab-reports" className="metric-link" style={{ color: "#10b981" }}>
+              <Link to="/lab-reports" className="metric-link metric-link-2">
                 <span>Upload & View Reports</span>
                 <ArrowRight size={16} />
               </Link>
