@@ -831,9 +831,8 @@ Contributions are welcome to expand clinical workflows and strengthen system sec
 
 - **Author**: N. Sai Ashish
 - **GitHub**: [@saiashish13](https://github.com/saiashish13)
-- **LinkedIn**: [N. Sai Ashish](https://www.linkedin.com/in/saiashish) *(Update with your direct profile URL)*
-- **Portfolio**: `[ Insert Portfolio URL ]`
-- **Email**: `[ Insert Contact Email ]`
+- **LinkedIn**: [N. Sai Ashish](https://www.linkedin.com/in/nakshatram-saiashish-85a166338/)
+- **Email**: [nsaiashish2@gmail.com](mailto:nsaiashish2@gmail.com)
 - **Repository**: [Health-Coordination-System](https://github.com/saiashish13/Health-Coordination-System)
 
 ---
